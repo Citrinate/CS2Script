@@ -1,0 +1,16 @@
+{
+  "name": "cs2script",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js --watch"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "esbuild": "^0.21.0",
+    "esbuild-plugin-alias": "^0.2.1",
+    "eslint": "^9.28.0",
+    "globals": "^16.2.0"
+  }
+}
