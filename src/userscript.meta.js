@@ -22,7 +22,7 @@ export const userscriptHeader =
 // @grant       unsafeWindow
 // @homepageURL https://github.com/Citrinate/CS2Script
 // @supportURL  https://github.com/Citrinate/CS2Script/issues
-// @downloadURL https://raw.githubusercontent.com/Citrinate/CS2Script/main/code.user.js
-// @updateURL   https://raw.githubusercontent.com/Citrinate/CS2Script/main/code.user.js
+// @downloadURL https://github.com/Citrinate/CS2Script/releases/latest/download/code.user.js
+// @updateURL   https://github.com/Citrinate/CS2Script/releases/latest/download/code.user.js
 // @require     https://github.com/Tampermonkey/utils/raw/d8a4543a5f828dfa8eefb0a3360859b6fe9c3c34/requires/gh_2215_make_GM_xhr_more_parallel_again.js
 // ==/UserScript==`;
