@@ -1,6 +1,6 @@
 # Counter-Strike 2 Script
 
-A userscript for managing your storage units and viewing detailed item information.
+A userscript for managing your storage units and inspecting items.
 
 ## Installation
 
