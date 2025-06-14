@@ -8,7 +8,7 @@ A userscript for managing your storage units and viewing detailed item informati
 2. Go [here](https://github.com/Citrinate/CS2Script/releases/latest/download/code.user.js) and click "Install"
 3. Make sure that you have:
     - [ArchiSteamFarm](https://github.com/JustArchiNET/ArchiSteamFarm) with [IPC](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/IPC) enabled (which is the default)
-    - The [Counter-Strike 2 Interface plugin](https://github.com/Citrinate/CS2Interface) (v1.1.0 or newer)
+    - The [Counter-Strike 2 Interface plugin](https://github.com/Citrinate/CS2Interface) (v1.1.0.0 or newer)
 
 ## Is this safe to use?
 
