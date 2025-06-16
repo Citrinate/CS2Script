@@ -1,6 +1,10 @@
 # Counter-Strike 2 Script
 
-A userscript for managing your storage units and inspecting items.
+[![Check out my other ArchiSteamFarm projects](https://img.shields.io/badge/Check%20out%20my%20other%20ArchiSteamFarm%20projects-blue?logo=github)](https://github.com/stars/Citrinate/lists/archisteamfarm-plugins)
+
+## Introduction
+
+This is a userscript for managing your storage units and inspecting items.
 
 ## Installation
 
