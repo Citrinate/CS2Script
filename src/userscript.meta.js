@@ -6,7 +6,8 @@ export const userscriptHeader =
 // @name        Counter-Strike 2 Script
 // @namespace   https://github.com/Citrinate
 // @author      Citrinate
-// @description Manage your storage units and view detailed item information
+// @description Manage your CS2 storage units and inspect items
+// @license     Apache-2.0
 // @version     ${pkg.version}
 // @match       https://steamcommunity.com/id/*/inventory*
 // @match       https://steamcommunity.com/profiles/*/inventory*
@@ -24,5 +25,4 @@ export const userscriptHeader =
 // @supportURL  https://github.com/Citrinate/CS2Script/issues
 // @downloadURL https://github.com/Citrinate/CS2Script/releases/latest/download/code.user.js
 // @updateURL   https://github.com/Citrinate/CS2Script/releases/latest/download/code.user.js
-// @require     https://github.com/Tampermonkey/utils/raw/d8a4543a5f828dfa8eefb0a3360859b6fe9c3c34/requires/gh_2215_make_GM_xhr_more_parallel_again.js
 // ==/UserScript==`;

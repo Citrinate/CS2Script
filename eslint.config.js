@@ -10,7 +10,7 @@ export default defineConfig([
 		languageOptions: {
 			globals: {
 				...globals.browser,
-				GM_xmlhttpRequest: 'readonly',
+				GM_xmlhttpRequest: 'writable', // writable only for tampermonkey issue 2215 workaround
 				GM_getValue: 'readonly',
 				GM_setValue: 'readonly',
 				GM_addStyle: 'readonly',
