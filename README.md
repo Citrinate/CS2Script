@@ -4,7 +4,7 @@
 
 ## Introduction
 
-This is a userscript for managing your storage units and inspecting items.
+This is a userscript for managing your Counter-Strike 2 storage units and inspecting items.
 
 > [!NOTE]
 > This script requires that you use [ArchiSteamFarm](https://github.com/JustArchiNET/ArchiSteamFarm)
