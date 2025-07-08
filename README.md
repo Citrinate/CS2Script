@@ -46,10 +46,10 @@ View detailed item information in Steam inventories or on the Steam marketplace.
 
 ## Usage
 
-If using non-default IPC settings, the first thing you'll need to do is open "Settings" and configure how the script connects to ASF. Status and controls for the script can be found in the account dropdown menu, while on any Steam inventory or market listing page.
+Status and controls for the script can be found in the account dropdown menu, while on any Steam inventory or market listing page.  If using non-default IPC settings with ASF, you'll need to configure how the script connects to ASF under "Settings".
 
 [![Menu](/screenshots/thumbnails/script_menu.png)](/screenshots/script_menu.png) [![Settings](/screenshots/thumbnails/script_settings.png)](/screenshots/script_settings.png)
 
-When managing your storage units, there's no need to manually start or stop the interface. If not running, you'll be be prompted to start the interface whenever it's required, and it will automatically stop after a period of inactivity (note: simply viewing a page where the script is active counts as activity).
+You have the option to manually Start and Stop the interface (connecting and disconnecting your account from CS2).  This is only necessary when you want to inspect items.  When managing your storage units, the script will prompt you to connect whenever necessary.  By default, the interface will automatically stop after a period of inactivity (note: simply viewing a page where the script is active counts as activity).
 
 To inspect items, the interface must be running on at least any one bot. If you want certain bots to have the interface always running for this purpose, it’s recommended you configure them to [auto-start](https://github.com/Citrinate/CS2Interface#autostartcs2interface) the interface.
