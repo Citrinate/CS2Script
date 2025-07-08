@@ -6,6 +6,9 @@
 
 This is a userscript for managing your storage units and inspecting items.
 
+> [!NOTE]
+> This script requires that you use [ArchiSteamFarm](https://github.com/JustArchiNET/ArchiSteamFarm)
+
 ## Installation
 
 1. Install a userscript manager like [Violentmonkey](https://violentmonkey.github.io/)
