@@ -130,7 +130,13 @@ export default class Inventory {
 		const cache = await Cache.GetValue(cache_id, null);
 
 		if (cache) {
-			if (this.loadedFromCache || cache.attributes["modification date"] == attributes["modification date"]) {
+			if (this.loadedFromCache 
+				|| (
+					cache.attributes["modification date"] >= attributes["modification date"] 
+					&& cache.attributes["items count"] == attributes["items count"]
+				)
+			) {
+				// the cached casket contents are still fresh
 				return cache.items;
 			}
 		}
@@ -351,10 +357,54 @@ export default class Inventory {
 	}
 
 	async StoreItem(asset, crateAsset) {
-		await ASF.Send("CS2Interface", `StoreItem/${crateAsset.iteminfo.id}/${asset.iteminfo.id}`, "GET", Script.Bot.ASF.BotName);
+		const result = await ASF.Send("CS2Interface", `StoreItem/${crateAsset.iteminfo.id}/${asset.iteminfo.id}`, "GET", Script.Bot.ASF.BotName);
+
+		if (result.Success) {
+			const casket_cache_id = `crate_${crateAsset.iteminfo.id}`;
+			const casket_cache = await Cache.GetValue(casket_cache_id, null);
+			const inventory_cache_id = `inventory_${unsafeWindow.g_steamID}`;
+			const inventory_cache = await Cache.GetValue(inventory_cache_id, null);
+
+			if (!casket_cache || !inventory_cache) {
+				return;
+			}
+
+			asset.casket_id = crateAsset.iteminfo.id;
+			casket_cache.items.push(asset);
+			casket_cache.items.sort((a, b) => b.iteminfo.id - a.iteminfo.id);
+			casket_cache.attributes["items count"]++;
+			casket_cache.attributes["modification date"] = Math.floor(Date.now() / 1000);
+			Cache.SetValue(casket_cache_id, casket_cache);
+
+			const index = inventory_cache.findIndex(obj => obj.iteminfo.id === asset.iteminfo.id);
+			inventory_cache.splice(index, 1);
+			Cache.SetValue(inventory_cache_id, inventory_cache);
+		}
 	}
 
 	async RetrieveItem(asset) {
-		await ASF.Send("CS2Interface", `RetrieveItem/${asset.casket_id}/${asset.iteminfo.id}`, "GET", Script.Bot.ASF.BotName);
+		const result = await ASF.Send("CS2Interface", `RetrieveItem/${asset.casket_id}/${asset.iteminfo.id}`, "GET", Script.Bot.ASF.BotName);
+
+		if (result.Success) {
+			const casket_cache_id = `crate_${asset.casket_id}`;
+			const casket_cache = await Cache.GetValue(casket_cache_id, null);
+			const inventory_cache_id = `inventory_${unsafeWindow.g_steamID}`;
+			const inventory_cache = await Cache.GetValue(inventory_cache_id, null);
+
+			if (!casket_cache || !inventory_cache) {
+				return;
+			}
+
+			const index = casket_cache.items.findIndex(obj => obj.iteminfo.id === asset.iteminfo.id);
+			casket_cache.items.splice(index, 1);
+			casket_cache.attributes["items count"]--;
+			casket_cache.attributes["modification date"] = Math.floor(Date.now() / 1000);
+			Cache.SetValue(casket_cache_id, casket_cache);
+
+			delete asset.casket_id;
+			inventory_cache.push(asset);
+			inventory_cache.sort((a, b) => b.iteminfo.id - a.iteminfo.id);
+			Cache.SetValue(inventory_cache_id, inventory_cache);
+		}
 	}
 }
