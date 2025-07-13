@@ -490,9 +490,19 @@ export default class Table {
 		if (item.keychains) {
 			let keychainID = item.attributes[`keychain slot 0 id`];
 			if (keychainID) {
-				cosmetics.append(CreateElement("img", {
-					src: `https://community.fastly.steamstatic.com/economy/image/${Inventory.iconURLs[item.keychains[keychainID].full_name]}/25fx19f`
-				}));
+				const keychain = item.keychains[keychainID];
+				const keychainSeed = item.attributes[`keychain slot 0 seed`];
+
+				const keychainIMG = CreateElement("img", {
+					src: `https://community.fastly.steamstatic.com/economy/image/${Inventory.iconURLs[keychain.full_name]}/25fx19f`
+				});
+				if (typeof keychainSeed !== "undefined") {
+					BindTooltip(keychainIMG, `${keychain.full_name} (${keychainSeed})`, { showStyle: false });
+				} else {
+					BindTooltip(keychainIMG, keychain.full_name, { showStyle: false });
+				}
+
+				cosmetics.append(keychainIMG);
 			}
 		}
 
@@ -500,9 +510,14 @@ export default class Table {
 			for (let slotNum = 0; slotNum < Constant.STICKER_MAX_COUNT; slotNum++) {
 				let stickerID = item.attributes[`sticker slot ${slotNum} id`];
 				if (stickerID) {
-					cosmetics.append(CreateElement("img", {
-						src: `https://community.fastly.steamstatic.com/economy/image/${Inventory.iconURLs[item.stickers[stickerID].full_name]}/25fx19f`
-					}));
+					const sticker = item.stickers[stickerID];
+
+					const stickerIMG = CreateElement("img", {
+						src: `https://community.fastly.steamstatic.com/economy/image/${Inventory.iconURLs[sticker.full_name]}/25fx19f`
+					});
+					BindTooltip(stickerIMG, sticker.full_name, { showStyle: false });
+
+					cosmetics.append(stickerIMG);
 				}
 			}
 		}

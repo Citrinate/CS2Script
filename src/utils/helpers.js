@@ -104,7 +104,7 @@ export function CreateCachedAsyncFunction(asyncFunction) {
 	return wrapped;
 }
 
-export function BindTooltip(element, text) {
+export function BindTooltip(element, text, options = {}) {
 	if (element.unbindTooltip) {
 		element.unbindTooltip();
 	}
@@ -116,7 +116,9 @@ export function BindTooltip(element, text) {
 
 	let fadeOutAnimation = null;
 
-	element.classList.add(`cs2s_has_tooltip`);
+	if (options.showStyle ?? true) {
+		element.classList.add(`cs2s_has_tooltip`);
+	}
 
 	function onMouseEnter() {
 		if (fadeOutAnimation) {
