@@ -220,17 +220,17 @@ export default class Table {
 		// Build Footer Elements
 
 		if (this.#mode === Table.MODE.RETRIEVE) {
-			this.#selectionLimit = Constant.INVENTORY_ITEM_LIMIT - inventory.items.length;
+			this.#selectionLimit = Constant.INVENTORY_ITEM_LIMIT - inventory.items.filter(x => typeof x.attributes["trade protected escrow date"] === "undefined").length;
 		} else {
 			this.#selectionLimit = Constant.STORAGE_UNIT_ITEM_LIMIT - inventory.storedItems.filter(x => x.casket_id == this.#casket.iteminfo.id).length;
 		}
 
 		const onStatusUpdate = (status) => {
-			if (this.#mode !== Table.MODE.RETRIEVE || typeof status.Plugin?.InventorySize === "undefined") {
+			if (this.#mode !== Table.MODE.RETRIEVE || typeof status.Plugin?.UnprotectedInventorySize === "undefined") {
 				return;
 			}
 
-			this.#selectionLimit = Constant.INVENTORY_ITEM_LIMIT - status.Plugin.InventorySize;
+			this.#selectionLimit = Constant.INVENTORY_ITEM_LIMIT - status.Plugin.UnprotectedInventorySize;
 			this.#UpdateFooter();
 		};
 
