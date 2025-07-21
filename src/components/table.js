@@ -740,13 +740,22 @@ export default class Table {
 
 		if (this.#selectedRows.size <= 0) {
 			this.#actionButton.classList.add("cs2s_button_disabled");
-			BindTooltip(this.#actionButton, "No items selected");
+			if (!this.#actionButton.tooltip) {
+				this.#actionButton.tooltip = BindTooltip(this.#actionButton, "No items selected");
+			} else {
+				this.#actionButton.tooltip.innerText = "No items selected";
+			}
 		} else if (this.#selectedRows.size > this.#selectionLimit) {
 			this.#actionButton.classList.add("cs2s_button_disabled");
-			BindTooltip(this.#actionButton, "Too many items selected");
+			if (!this.#actionButton.tooltip) {
+				this.#actionButton.tooltip = BindTooltip(this.#actionButton, "Too many items selected");
+			} else {
+				this.#actionButton.tooltip.innerText = "Too many items selected";
+			}
 		} else {
 			this.#actionButton.classList.remove("cs2s_button_disabled");
 			this.#actionButton.unbindTooltip && this.#actionButton.unbindTooltip();
+			this.#actionButton.tooltip = null;
 		}
 
 		if (this.#selectedRows.size > 0) {
