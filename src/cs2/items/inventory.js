@@ -68,12 +68,15 @@ export default class Inventory {
 			// Correct for item qualities having wierd unsortable values
 			if (item.iteminfo.quality == 3) {
 				// ★ items
-				item.quality = 3 + Number(item.stattrak === true);
+				item.quality = 4 + Number(item.stattrak === true); // 4 for ★, 5 for ★ StatTrak
 			} else if (item.iteminfo.quality == 12) {
 				// Souvenir items
-				item.quality = 2;
+				item.quality = 1;
+			} else if (item.iteminfo.quality == 13) {
+				// Highlight items
+				item.quality = 3;
 			} else {
-				item.quality = Number(item.stattrak === true) * 2;
+				item.quality = Number(item.stattrak === true) * 2; // 0 for Normal, 2 for StatTrak
 			}
 
 			if (item.casket_id) {

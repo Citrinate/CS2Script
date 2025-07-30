@@ -7,6 +7,7 @@
 	--cs2s-stattrak-color: #cf6a32;
 	--cs2s-quality-3-color: #8650ac;
 	--cs2s-quality-12-color: #ffd700;
+	--cs2s-quality-13-color: #ffd7aa;
 	--cs2s-rarity-7-color: #e4ae33;
 	--cs2s-rarity-6-color: #eb4b4b;
 	--cs2s-rarity-5-color: #d32ce6;
@@ -28,10 +29,11 @@
 .cs2s_color_rarity_3 { color: var(--cs2s-rarity-3-color) !important; }
 .cs2s_color_rarity_2 { color: var(--cs2s-rarity-2-color) !important; }
 .cs2s_color_rarity_1 { color: var(--cs2s-rarity-1-color) !important; }
-.cs2s_color_quality_1 { color: var(--cs2s-stattrak-color) !important; }
-.cs2s_color_quality_2 { color: var(--cs2s-quality-12-color) !important; }
-.cs2s_color_quality_3  { color: var(--cs2s-quality-3-color) !important; }
+.cs2s_color_quality_1 { color: var(--cs2s-quality-12-color) !important; }
+.cs2s_color_quality_2 { color: var(--cs2s-stattrak-color) !important; }
+.cs2s_color_quality_3  { color: var(--cs2s-quality-13-color) !important; }
 .cs2s_color_quality_4  { color: var(--cs2s-quality-3-color) !important; }
+.cs2s_color_quality_5  { color: var(--cs2s-quality-3-color) !important; }
 
 .cs2s_asset_wear {
 	position: absolute;
