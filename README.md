@@ -17,14 +17,6 @@ This userscript allows you to manage your Counter-Strike 2 storage units through
     - [ArchiSteamFarm](https://github.com/JustArchiNET/ArchiSteamFarm) with [IPC](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/IPC) enabled (which is the default)
     - The [Counter-Strike 2 Interface plugin](https://github.com/Citrinate/CS2Interface)
 
-## Is this safe to use?
-
-This userscript and its associated ASF plugin work without knowing any of your private account details (their connection to Steam is fully managed by ArchiSteamFarm). All source code is open source, and all releases obtained from official sources are verifiably built from that source code.
-
-Nothing here interacts with the Counter-Strike 2 game client, nor are you even required to have the game installed, and so there is no risk of receiving a VAC ban. No Steam account data, CS2 item data, or any other information is shared through usage of this script or its associated plugin.
-
-This tool works by sending requests to the Counter-Strike 2 game coordinator. No serious attempt is made to trick Valve's servers into thinking these requests are coming from an authentic Counter-Strike 2 game client, and so it should be assumed that Valve can identify all accounts using tools like this. Valve has not been known to take action against such accounts, but there is no guarantee that this will always be the case.
-
 ## Features
 
 ### Storage Unit Management
@@ -53,3 +45,11 @@ Status and controls for the script can be found in the account dropdown menu, wh
 You have the option to manually Start and Stop the interface (connecting and disconnecting your account from CS2).  This is only necessary when you want to inspect items.  When managing your storage units, the script will prompt you to connect whenever necessary.  By default, the interface will automatically stop after a period of inactivity (note: simply viewing a page where the script is active counts as activity).
 
 To inspect items, the interface must be running on at least any one bot. If you want certain bots to have the interface always running for this purpose, it’s recommended you configure them to [auto-start](https://github.com/Citrinate/CS2Interface#autostartcs2interface) the interface.
+
+## Is this safe to use?
+
+This userscript and its associated ASF plugin work without knowing any of your private account details (their connection to Steam is fully managed by ArchiSteamFarm). All source code is open source, and all releases obtained from official sources are verifiably built from that source code.
+
+Nothing here interacts with the Counter-Strike 2 game client, nor are you even required to have the game installed, and so there is no risk of receiving a VAC ban. No Steam account data, CS2 item data, or any other information is shared through usage of this script or its associated plugin.
+
+This tool works by sending requests to the Counter-Strike 2 game coordinator. No serious attempt is made to trick Valve's servers into thinking these requests are coming from an authentic Counter-Strike 2 game client, and so it should be assumed that Valve can identify all accounts using tools like this. Valve has not been known to take action against such accounts, but there is no guarantee that this will always be the case.
