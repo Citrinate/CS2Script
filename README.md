@@ -4,7 +4,7 @@
 
 ## Introduction
 
-This userscript allows you to manage your Counter-Strike 2 storage units through the Steam Inventory, and inspect items in inventories and on the Steam Marketplace.
+This userscript allows you to manage your Counter-Strike 2 storage units through your Steam Inventory, and inspect items in inventories or on the Steam Marketplace.
 
 > [!NOTE]
 > This script requires that you use [ArchiSteamFarm](https://github.com/JustArchiNET/ArchiSteamFarm)
