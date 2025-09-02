@@ -1,13 +1,10 @@
-# Counter-Strike 2 Script
+# Counter-Strike 2 Script for ArchiSteamFarm
 
 [![Check out my other ArchiSteamFarm projects](https://img.shields.io/badge/Check%20out%20my%20other%20ArchiSteamFarm%20projects-blue?logo=github)](https://github.com/stars/Citrinate/lists/archisteamfarm-plugins)  ![GitHub all releases](https://img.shields.io/github/downloads/Citrinate/CS2Script/total?logo=github&label=Downloads)
 
 ## Introduction
 
 This userscript allows you to manage your Counter-Strike 2 storage units through your Steam Inventory, and inspect items in inventories or on the Steam Marketplace.
-
-> [!NOTE]
-> This script requires that you use [ArchiSteamFarm](https://github.com/JustArchiNET/ArchiSteamFarm)
 
 ## Installation
 
