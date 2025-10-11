@@ -59,7 +59,7 @@ export default class Inventory {
 		for (const item of [...this.items, ...this.storedItems]) {
 			item.id = item.iteminfo.id;
 			item.name = !!item.wear_name && item.full_name.includes(item.wear_name) ? item.full_name.slice(0, -(item.wear_name.length + 3)) : item.full_name;
-			item.name_normalized = item.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+			item.name_normalized = !item.name ? undefined : item.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 			item.collection_name = item.set_name ?? item.crate_name?.replace(/( Autograph Capsule)$/, " Autographs").replace(/( Capsule)$/, "");
 			item.collection = item.collection_name?.replace(/^(The )/, "").replace(/( Collection)$/, "").replace(/^(Operation )/, "").replace(/( Autographs)$/, "");
 			item.rarity = item.collection || item.iteminfo.rarity > 1 ? item.iteminfo.rarity : undefined; // leave rarity undefined for crates and such items for sorting purposes
