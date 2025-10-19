@@ -3,7 +3,7 @@ import ASF from '@core/asf.js';
 import Inventory from '@cs2/items/inventory';
 import Popup from '@components/popup';
 import Cache from '@utils/cache';
-import { CreateElement, BindTooltip, Fade, Sleep, CreateCachedAsyncFunction } from '@utils/helpers.js';
+import { CreateElement, BindTooltip, Fade, Sleep, CreateCachedAsyncFunction, CompareVersions } from '@utils/helpers.js';
 
 export const OPERATION_ERROR = {
 	INTERFACE_NOT_CONNECTED: 0,
@@ -11,12 +11,14 @@ export const OPERATION_ERROR = {
 };
 
 export const ERROR_LEVEL = {
-	HIGH: 0,
-	MEDIUM: 1,
-	LOW: 2
+	HIGH: 0, // Popup notification
+	MEDIUM: 1, // Navigation menu glow
+	LOW: 2 // Log error only
 };
 
 class Script {
+	static MIN_PLUGIN_VERSION = "1.2.0.0";
+
 	Bot;
 	AccountsConnected = 0;
 
@@ -245,6 +247,10 @@ class Script {
 
 			if (!bot) {
 				throw new Error("ASF bot for this account was not found. If ASF was recently started, please wait until your bots come online and then reload the page.");
+			}
+
+			if (CompareVersions(Script.MIN_PLUGIN_VERSION, bot.Plugin.Version ?? "0") > 0) {
+				this.ShowError({ level: ERROR_LEVEL.MEDIUM }, new Error(`CS2 Interface plugin is outdated, please update to version ${Script.MIN_PLUGIN_VERSION} or newer`));
 			}
 
 			this.Bot = bot;
