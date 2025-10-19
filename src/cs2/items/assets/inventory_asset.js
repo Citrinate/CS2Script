@@ -2,7 +2,7 @@ import Script, { ERROR_LEVEL, OPERATION_ERROR } from "@core/script.js";
 import { GetSetting, SETTING_INSPECT_ITEMS } from "@core/settings.js";
 import Asset from "@cs2/items/assets/asset.js";
 import Inventory from "@cs2/items/inventory.js";
-import Table from "@components/table.js";
+import ItemTable from "@components/item_table.js";
 import LabelPopup from "@components/label_popup";
 import { CreateElement } from "@utils/helpers.js";
 
@@ -359,8 +359,8 @@ export default class InventoryAsset extends Asset {
 								return;
 							}
 
-							const table = new Table(inventory.storedItems.filter(x => x.casket_id == this._assetid), inventory, {
-								mode: Table.MODE.RETRIEVE,
+							const table = new ItemTable(inventory.storedItems.filter(x => x.casket_id == this._assetid), inventory, {
+								mode: ItemTable.MODE.RETRIEVE,
 								casket: casket,
 								casketName: casket.attributes["custom name attr"]
 							});
@@ -408,8 +408,8 @@ export default class InventoryAsset extends Asset {
 								return;
 							}
 
-							const table = new Table(inventory.items.filter(x => x.moveable), inventory, {
-								mode: Table.MODE.STORE,
+							const table = new ItemTable(inventory.items.filter(x => x.moveable), inventory, {
+								mode: ItemTable.MODE.STORE,
 								casket: casket,
 								casketName: casket.attributes["custom name attr"]
 							});

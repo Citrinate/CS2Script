@@ -6,7 +6,7 @@ import Popup from '@components/popup.js';
 import Worker from '@utils/worker';
 import { CreateElement, BindTooltip, Sleep, Random } from '@utils/helpers.js';
 
-export default class Table {
+export default class ItemTable {
 	#mode;
 	#casket;
 	#multiCasket;
@@ -31,7 +31,7 @@ export default class Table {
 	static ROW_HEIGHT = 69;
 	static BUFFER_ROWS = 3;
 	#VISIBLE_ROWS;
-	get #NUM_ROW_ELEMENTS() { return this.#VISIBLE_ROWS + Table.BUFFER_ROWS * 2; };
+	get #NUM_ROW_ELEMENTS() { return this.#VISIBLE_ROWS + ItemTable.BUFFER_ROWS * 2; };
 
 	#popup;
 
@@ -63,7 +63,7 @@ export default class Table {
 		this.#casket = options.casket ?? null;
 		this.#multiCasket = options.multiCasket ?? false;
 
-		this.#VISIBLE_ROWS = Math.max(1, Math.floor((unsafeWindow.innerHeight * .66) / Table.ROW_HEIGHT));
+		this.#VISIBLE_ROWS = Math.max(1, Math.floor((unsafeWindow.innerHeight * .66) / ItemTable.ROW_HEIGHT));
 
 		this.#data.map(item => delete item.element);
 
@@ -211,7 +211,7 @@ export default class Table {
 		this.#tableContainer = CreateElement("div", {
 			class: "cs2s_table_container",
 			style: {
-				height: `${(this.#VISIBLE_ROWS + 1) * Table.ROW_HEIGHT}px`
+				height: `${(this.#VISIBLE_ROWS + 1) * ItemTable.ROW_HEIGHT}px`
 			},
 			onscroll: () => { this.#UpdateRows(); },
 			children: [this.#table]
@@ -219,14 +219,14 @@ export default class Table {
 
 		// Build Footer Elements
 
-		if (this.#mode === Table.MODE.RETRIEVE) {
+		if (this.#mode === ItemTable.MODE.RETRIEVE) {
 			this.#selectionLimit = Constant.INVENTORY_ITEM_LIMIT - inventory.items.filter(x => typeof x.attributes["trade protected escrow date"] === "undefined").length;
 		} else {
 			this.#selectionLimit = Constant.STORAGE_UNIT_ITEM_LIMIT - inventory.storedItems.filter(x => x.casket_id == this.#casket.iteminfo.id).length;
 		}
 
 		const onStatusUpdate = (status) => {
-			if (this.#mode !== Table.MODE.RETRIEVE || typeof status.Plugin?.UnprotectedInventorySize === "undefined") {
+			if (this.#mode !== ItemTable.MODE.RETRIEVE || typeof status.Plugin?.UnprotectedInventorySize === "undefined") {
 				return;
 			}
 
@@ -280,7 +280,7 @@ export default class Table {
 
 				if (!Script.Bot?.Plugin?.Connected) {
 					Script.ShowStartInterfacePrompt({
-						message: this.#mode === Table.MODE.RETRIEVE
+						message: this.#mode === ItemTable.MODE.RETRIEVE
 							? "Interface must running to retrieve items"
 							: "Interface must running to store items",
 						autoClose: true,
@@ -423,7 +423,7 @@ export default class Table {
 
 		// Build Popup Elements
 
-		const popupTitle = this.#mode === Table.MODE.RETRIEVE
+		const popupTitle = this.#mode === ItemTable.MODE.RETRIEVE
 			? "Select items to retrieve from "
 			: "Select items to move into ";
 
@@ -651,7 +651,7 @@ export default class Table {
 		}
 
 		this.#spacer.style.height = "0px"
-		this.#spacer.style.height = `${(this.#filteredData.length * Table.ROW_HEIGHT) - this.#table.clientHeight + 31}px`;
+		this.#spacer.style.height = `${(this.#filteredData.length * ItemTable.ROW_HEIGHT) - this.#table.clientHeight + 31}px`;
 
 		this.#UpdateRows();
 		this.#UpdateFooter();
@@ -662,7 +662,7 @@ export default class Table {
 					CreateElement("td", {
 						class: "cs2s_table_empty",
 						colspan: 6,
-						text: this.#mode == Table.MODE.RETRIEVE ? "Storage Unit is empty" : "Inventory has no storable items"
+						text: this.#mode == ItemTable.MODE.RETRIEVE ? "Storage Unit is empty" : "Inventory has no storable items"
 					})
 				]
 			}));
@@ -674,7 +674,7 @@ export default class Table {
 			0,
 			Math.min(
 				this.#filteredData.length - this.#NUM_ROW_ELEMENTS,
-				Math.floor(this.#tableContainer.scrollTop / Table.ROW_HEIGHT) - Table.BUFFER_ROWS
+				Math.floor(this.#tableContainer.scrollTop / ItemTable.ROW_HEIGHT) - ItemTable.BUFFER_ROWS
 			)
 		);
 
@@ -730,7 +730,7 @@ export default class Table {
 			}
 		}
 
-		this.#tableBody.style.transform = `translate3d(0, ${startRow * Table.ROW_HEIGHT}px, 0)`;
+		this.#tableBody.style.transform = `translate3d(0, ${startRow * ItemTable.ROW_HEIGHT}px, 0)`;
 	}
 
 	#UpdateFooter() {
@@ -871,12 +871,12 @@ export default class Table {
 		let resetSort = false;
 
 		if (options.event) {
-			if (this.#sortDirection === Table.SORT_DIRECTION.DESC) {
+			if (this.#sortDirection === ItemTable.SORT_DIRECTION.DESC) {
 				this.#sortColumns = ["casket_id", "id"];
-				this.#sortDirection = Table.SORT_DIRECTION.DESC;
+				this.#sortDirection = ItemTable.SORT_DIRECTION.DESC;
 				resetSort = true;
-			} else if (this.#sortDirection === Table.SORT_DIRECTION.ASC) {
-				this.#sortDirection = Table.SORT_DIRECTION.DESC;
+			} else if (this.#sortDirection === ItemTable.SORT_DIRECTION.ASC) {
+				this.#sortDirection = ItemTable.SORT_DIRECTION.DESC;
 			}
 		}
 
@@ -885,10 +885,10 @@ export default class Table {
 		}
 
 		if (!this.#sortDirection) {
-			this.#sortDirection = Table.SORT_DIRECTION.ASC;
+			this.#sortDirection = ItemTable.SORT_DIRECTION.ASC;
 		}
 
-		const asc = this.#sortDirection === Table.SORT_DIRECTION.ASC;
+		const asc = this.#sortDirection === ItemTable.SORT_DIRECTION.ASC;
 
 		this.#filteredData.sort((a, b) => {
 			for (const column of this.#sortColumns) {
@@ -1769,7 +1769,7 @@ export default class Table {
 
 		const progressMessage = CreateElement("div", {
 			class: "cs2s_action_message",
-			text: this.#mode == Table.MODE.RETRIEVE ? "Retrieving Items" : "Storing Items"
+			text: this.#mode == ItemTable.MODE.RETRIEVE ? "Retrieving Items" : "Storing Items"
 		});
 
 		const progressBar = CreateElement("div", {
@@ -1800,7 +1800,7 @@ export default class Table {
 		});
 
 		const popup = new Popup({
-			title: this.#mode == Table.MODE.RETRIEVE
+			title: this.#mode == ItemTable.MODE.RETRIEVE
 				? "Retrieving From Storage Unit"
 				: "Moving To Storage Unit",
 			body: [popupBody],
@@ -1836,7 +1836,7 @@ export default class Table {
 					}
 
 					try {
-						if (this.#mode == Table.MODE.RETRIEVE) {
+						if (this.#mode == ItemTable.MODE.RETRIEVE) {
 							await this.#inventory.RetrieveItem(item);
 						} else {
 							await this.#inventory.StoreItem(item, this.#casket);
@@ -1854,7 +1854,7 @@ export default class Table {
 
 						worker.Cancel();
 						popup.Hide();
-						Script.ShowError({ level: ERROR_LEVEL.HIGH }, e, new Error(`Failed to ${this.#mode == Table.MODE.RETRIEVE ? "retrieve" : "store"} "${item.full_name}".  If errors persist, reload the page and try again.`));
+						Script.ShowError({ level: ERROR_LEVEL.HIGH }, e, new Error(`Failed to ${this.#mode == ItemTable.MODE.RETRIEVE ? "retrieve" : "store"} "${item.full_name}".  If errors persist, reload the page and try again.`));
 
 						return;
 					}
@@ -1871,7 +1871,7 @@ export default class Table {
 				this.#UpdateTable();
 
 				numItemsProcessed++;
-				progressMessage.innerText = (this.#mode == Table.MODE.RETRIEVE ? "Retrieving Items" : "Storing Items") + ` (${numItemsProcessed}/${numItemsToProcess})`;
+				progressMessage.innerText = (this.#mode == ItemTable.MODE.RETRIEVE ? "Retrieving Items" : "Storing Items") + ` (${numItemsProcessed}/${numItemsToProcess})`;
 				progressBar.style.setProperty("--percentage", `${((numItemsProcessed / numItemsToProcess) * 100).toFixed(2)}%`);
 
 				itemWindow.append(itemImage);

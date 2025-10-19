@@ -3,7 +3,7 @@ import { CS2_APPID } from '@cs2/constants.js';
 import Inventory from '@cs2/items/inventory.js';
 import InventoryAsset from '@cs2/items/assets/inventory_asset.js';
 import MarketAsset from '@cs2/items/assets/market_asset.js';
-import Table from '@components/table.js';
+import ItemTable from '@components/item_table.js';
 import { CreateElement } from '@utils/helpers.js';
 import style from '@css/style.css';
 
@@ -225,8 +225,8 @@ import style from '@css/style.css';
 						return;
 					}
 
-					const table = new Table(inventory.storedItems.slice(), inventory, {
-						mode: Table.MODE.RETRIEVE,
+					const table = new ItemTable(inventory.storedItems.slice(), inventory, {
+						mode: ItemTable.MODE.RETRIEVE,
 						casketName: "All Storage Units",
 						multiCasket: true,
 					});
