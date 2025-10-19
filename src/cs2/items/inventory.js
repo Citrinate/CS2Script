@@ -362,6 +362,7 @@ export default class Inventory {
 	async StoreItem(asset, crateAsset) {
 		const result = await ASF.Send("CS2Interface", `StoreItem/${crateAsset.iteminfo.id}/${asset.iteminfo.id}`, "GET", Script.Bot.ASF.BotName);
 
+		// Update cached data now to avoid having to request the full contents of the storage unit on next reload
 		if (result.Success) {
 			const casket_cache_id = `crate_${crateAsset.iteminfo.id}`;
 			const casket_cache = await Cache.GetValue(casket_cache_id, null);
@@ -372,6 +373,7 @@ export default class Inventory {
 				return;
 			}
 
+			// Update cached storage unit data
 			asset.casket_id = crateAsset.iteminfo.id;
 			casket_cache.items.push(asset);
 			casket_cache.items.sort((a, b) => b.iteminfo.id - a.iteminfo.id);
@@ -379,6 +381,7 @@ export default class Inventory {
 			casket_cache.attributes["modification date"] = Math.floor(Date.now() / 1000);
 			Cache.SetValue(casket_cache_id, casket_cache);
 
+			// Update cached inventory data
 			const index = inventory_cache.findIndex(obj => obj.iteminfo.id === asset.iteminfo.id);
 			inventory_cache.splice(index, 1);
 			Cache.SetValue(inventory_cache_id, inventory_cache);
@@ -388,6 +391,7 @@ export default class Inventory {
 	async RetrieveItem(asset) {
 		const result = await ASF.Send("CS2Interface", `RetrieveItem/${asset.casket_id}/${asset.iteminfo.id}`, "GET", Script.Bot.ASF.BotName);
 
+		// Update cached data now to avoid having to request the full contents of the storage unit on next reload
 		if (result.Success) {
 			const casket_cache_id = `crate_${asset.casket_id}`;
 			const casket_cache = await Cache.GetValue(casket_cache_id, null);
@@ -398,16 +402,36 @@ export default class Inventory {
 				return;
 			}
 
+			// Update cached storage unit data
 			const index = casket_cache.items.findIndex(obj => obj.iteminfo.id === asset.iteminfo.id);
 			casket_cache.items.splice(index, 1);
 			casket_cache.attributes["items count"]--;
 			casket_cache.attributes["modification date"] = Math.floor(Date.now() / 1000);
 			Cache.SetValue(casket_cache_id, casket_cache);
 
+			// Update cached inventory data
 			delete asset.casket_id;
 			inventory_cache.push(asset);
 			inventory_cache.sort((a, b) => b.iteminfo.id - a.iteminfo.id);
 			Cache.SetValue(inventory_cache_id, inventory_cache);
+		}
+	}
+
+	async LabelStorageUnit(casket, name) {
+		const result = await ASF.Send("CS2Interface", `NameItem`, "GET", Script.Bot.ASF.BotName, { itemID: casket.iteminfo.id, name: name });
+
+		// Update cached data now to avoid having to request the full contents of the storage unit on next reload
+		if (result.Success) {
+			const casket_cache_id = `crate_${casket.iteminfo.id}`;
+			const casket_cache = await Cache.GetValue(casket_cache_id, null);
+
+			if (!casket_cache) {
+				return;
+			}
+
+			// Update cached storage unit data
+			casket_cache.attributes["modification date"] = Math.floor(Date.now() / 1000);
+			Cache.SetValue(casket_cache_id, casket_cache);
 		}
 	}
 }

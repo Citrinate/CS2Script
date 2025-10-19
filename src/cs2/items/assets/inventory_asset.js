@@ -3,6 +3,7 @@ import { GetSetting, SETTING_INSPECT_ITEMS } from "@core/settings.js";
 import Asset from "@cs2/items/assets/asset.js";
 import Inventory from "@cs2/items/inventory.js";
 import Table from "@components/table.js";
+import LabelPopup from "@components/label_popup";
 import { CreateElement } from "@utils/helpers.js";
 
 export default class InventoryAsset extends Asset {
@@ -302,79 +303,216 @@ export default class InventoryAsset extends Asset {
 		} else if (this._type == Asset.TYPE.STORAGE_UNIT) {
 			// Storage units
 			ownerActionsElement.style.display = "block";
-			ownerActionsElement.append(
-				CreateElement("a", {
-					class: "btn_small btn_grey_white_innerfade",
-					html: "<span>Retrieve Items</span>",
-					onclick: async () => {
-						const inventory = await Script.GetInventory({ showProgress: true });
 
-						if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
-							Script.ShowStartInterfacePrompt({
-								message: "Interface must be running to fetch stored items",
-								fade: false
+			let nameTag;
+
+			for (const description of this._asset.description.descriptions) {
+				if (description.name == "nametag") {
+					const matches = description.value.match(/.*?''(.*?)''/); // Matches name in: Name Tag: ''Name''
+
+					if (matches) {
+						nameTag = matches[1];
+					}
+				}
+			}
+
+			if (nameTag) {
+				ownerActionsElement.append(
+					CreateElement("a", {
+						class: "btn_small btn_grey_white_innerfade",
+						html: "<span>Retrieve Items</span>",
+						onclick: async () => {
+							const inventory = await Script.GetInventory({ showProgress: true });
+
+							if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
+								Script.ShowStartInterfacePrompt({
+									message: "Inventory not cached.  Please start the interface",
+									fade: false
+								});
+
+								return;
+							}
+
+							if (inventory === OPERATION_ERROR.INVENTORY_FAILED_TO_LOAD) {
+								Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
+
+								return;
+							}
+
+							if (!(inventory instanceof Inventory)) {
+								return;
+							}
+
+							const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
+
+							if (!casket) {
+								Script.ShowStartInterfacePrompt({
+									message: "Storage unit not cached.  Please start the interface",
+									autoClose: true,
+									popoverMode: true,
+									fade: false,
+									onconnected: () => {
+										window.location.reload();
+									}
+								});
+
+								return;
+							}
+
+							const table = new Table(inventory.storedItems.filter(x => x.casket_id == this._assetid), inventory, {
+								mode: Table.MODE.RETRIEVE,
+								casket: casket,
+								casketName: casket.attributes["custom name attr"]
 							});
 
-							return;
+							table.Show();
 						}
+					}),
+					CreateElement("a", {
+						class: "btn_small btn_grey_white_innerfade",
+						html: "<span>Deposit Items</span>",
+						onclick: async () => {
+							const inventory = await Script.GetInventory({ showProgress: true });
 
-						if (inventory === OPERATION_ERROR.INVENTORY_FAILED_TO_LOAD) {
-							Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
+							if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
+								Script.ShowStartInterfacePrompt({
+									message: "Inventory not cached.  Please start the interface"
+								});
 
-							return;
-						}
+								return;
+							}
 
-						if (!(inventory instanceof Inventory)) {
-							return;
-						}
+							if (inventory === OPERATION_ERROR.INVENTORY_FAILED_TO_LOAD) {
+								Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
 
-						const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
+								return;
+							}
 
-						const table = new Table(inventory.storedItems.filter(x => x.casket_id == this._assetid), inventory, {
-							mode: Table.MODE.RETRIEVE,
-							casket: casket,
-							casketName: casket.attributes["custom name attr"]
-						});
+							if (!(inventory instanceof Inventory)) {
+								return;
+							}
 
-						table.Show();
-					}
-				}),
-				CreateElement("a", {
-					class: "btn_small btn_grey_white_innerfade",
-					html: "<span>Deposit Items</span>",
-					onclick: async () => {
-						const inventory = await Script.GetInventory({ showProgress: true });
+							const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
 
-						if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
-							Script.ShowStartInterfacePrompt({
-								message: "Interface must be running to fetch inventory items"
+							if (!casket) {
+								Script.ShowStartInterfacePrompt({
+									message: "Storage unit not cached.  Please start the interface",
+									autoClose: true,
+									popoverMode: true,
+									fade: false,
+									onconnected: () => {
+										window.location.reload();
+									}
+								});
+
+								return;
+							}
+
+							const table = new Table(inventory.items.filter(x => x.moveable), inventory, {
+								mode: Table.MODE.STORE,
+								casket: casket,
+								casketName: casket.attributes["custom name attr"]
 							});
 
-							return;
+							table.Show();
 						}
+					}),
+					CreateElement("a", {
+						class: "btn_small btn_grey_white_innerfade",
+						html: "<span>Change Label</span>",
+						onclick: async () => {
+							const inventory = await Script.GetInventory({ showProgress: true });
 
-						if (inventory === OPERATION_ERROR.INVENTORY_FAILED_TO_LOAD) {
-							Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
+							if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
+								Script.ShowStartInterfacePrompt({
+									message: "Inventory not cached.  Please start the interface"
+								});
 
-							return;
+								return;
+							}
+
+							if (inventory === OPERATION_ERROR.INVENTORY_FAILED_TO_LOAD) {
+								Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
+
+								return;
+							}
+
+							if (!(inventory instanceof Inventory)) {
+								return;
+							}
+
+							const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
+
+							if (!casket) {
+								Script.ShowStartInterfacePrompt({
+									message: "Storage unit not cached.  Please start the interface",
+									autoClose: true,
+									popoverMode: true,
+									fade: false,
+									onconnected: () => {
+										window.location.reload();
+									}
+								});
+
+								return;
+							}
+
+							const nameForm = new LabelPopup(casket, inventory);
+
+							nameForm.Show();							
 						}
+					})
+				);
+			} else {
+				// New unlabeled storage unit
+				ownerActionsElement.append(
+					CreateElement("a", {
+						class: "btn_small btn_grey_white_innerfade",
+						html: "<span>Start Using This Unit</span>",
+						onclick: async () => {
+							const inventory = await Script.GetInventory({ showProgress: true });
 
-						if (!(inventory instanceof Inventory)) {
-							return;
+							if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
+								Script.ShowStartInterfacePrompt({
+									message: "Inventory not cached.  Please start the interface"
+								});
+
+								return;
+							}
+
+							if (inventory === OPERATION_ERROR.INVENTORY_FAILED_TO_LOAD) {
+								Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
+
+								return;
+							}
+
+							if (!(inventory instanceof Inventory)) {
+								return;
+							}
+
+							const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
+
+							if (!casket) {
+								Script.ShowStartInterfacePrompt({
+									message: "Storage unit not cached.  Please start the interface",
+									autoClose: true,
+									popoverMode: true,
+									fade: false,
+									onconnected: () => {
+										window.location.reload();
+									}
+								});
+
+								return;
+							}
+
+							const nameForm = new LabelPopup(casket, inventory);
+
+							nameForm.Show();							
 						}
-
-						const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
-
-						const table = new Table(inventory.items.filter(x => x.moveable), inventory, {
-							mode: Table.MODE.STORE,
-							casket: casket,
-							casketName: casket.attributes["custom name attr"]
-						});
-
-						table.Show();
-					}
-				})
-			);
+					})
+				);
+			}
 		}
 	}
 }
