@@ -298,8 +298,10 @@ import style from '@css/style.css';
 
 		{ // Add elements to the selected inventory item
 			const handleSelectedAsset = (asset) => {
-				const inventoryAsset = new InventoryAsset(asset);
-				inventoryAsset.BuildSelectedUI();
+				requestAnimationFrame(() => {
+					const inventoryAsset = new InventoryAsset(asset);
+					inventoryAsset.BuildSelectedUI();
+				});
 			};
 
 			const originalSelectItem = unsafeWindow.CInventory.prototype.SelectItem;

@@ -207,10 +207,10 @@ export default class InventoryAsset extends Asset {
 	async BuildSelectedUI() {
 		// Add UI elements to the currently selected item in the inventory
 		const selectedItem = unsafeWindow.iActiveSelectView;
-		const descriptionsElement = unsafeWindow.document.getElementById(`iteminfo${selectedItem}_item_descriptors`);
+		const descriptionsElement = unsafeWindow.document.getElementById(`iteminfo${selectedItem}`).children[0].children[0].children[0].children[0].children[0].children[4];
 		const stickerElements = descriptionsElement.getElementsBySelector("#sticker_info img");
 		const charmElements = descriptionsElement.getElementsBySelector("#keychain_info img");
-		const ownerActionsElement = unsafeWindow.document.getElementById(`iteminfo${selectedItem}_item_owner_actions`);
+		const ownerActionsElement = unsafeWindow.document.getElementById(`iteminfo${selectedItem}`).children[0].children[0].children[0].children[0].children[0].children[5];
 
 		if (this.ShouldInspect() && GetSetting(SETTING_INSPECT_ITEMS)) {
 			// Weapon skins
