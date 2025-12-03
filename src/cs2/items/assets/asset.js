@@ -9,7 +9,7 @@ import { CreateElement, BindTooltip } from '@utils/helpers.js';
 
 export default class Asset {
 	_assetid;
-	_type;
+	_type = Asset.TYPE.OTHER;
 	_inspectLink;
 	_inspectData;
 	_wearData;
@@ -216,7 +216,7 @@ export default class Asset {
 		}
 
 		const wearRangeElement = CreateElement("div", {
-			class: "descriptor cs2s_asset_wear_range"
+			class: "descriptor cs2s_asset_wear_range cs2s_element"
 		});
 
 		for (const wear of WEARS) {

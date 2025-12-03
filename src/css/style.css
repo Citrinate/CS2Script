@@ -5,9 +5,8 @@
 	--cs2s-wear-ww-color: #e86f24;
 	--cs2s-wear-bs-color: #ea2828;
 	--cs2s-stattrak-color: #cf6a32;
-	--cs2s-quality-3-color: #8650ac;
-	--cs2s-quality-12-color: #ffd700;
-	--cs2s-quality-13-color: #ffd7aa;
+	--cs2s-souvenir-color: #ffd700;
+	--cs2s-highlight-color: #ffd7aa;
 	--cs2s-rarity-7-color: #e4ae33;
 	--cs2s-rarity-6-color: #eb4b4b;
 	--cs2s-rarity-5-color: #d32ce6;
@@ -29,17 +28,15 @@
 .cs2s_color_rarity_3 { color: var(--cs2s-rarity-3-color) !important; }
 .cs2s_color_rarity_2 { color: var(--cs2s-rarity-2-color) !important; }
 .cs2s_color_rarity_1 { color: var(--cs2s-rarity-1-color) !important; }
-.cs2s_color_quality_1 { color: var(--cs2s-quality-12-color) !important; }
+.cs2s_color_quality_1 { color: var(--cs2s-souvenir-color) !important; }
 .cs2s_color_quality_2 { color: var(--cs2s-stattrak-color) !important; }
-.cs2s_color_quality_3  { color: var(--cs2s-quality-13-color) !important; }
-.cs2s_color_quality_4  { color: var(--cs2s-quality-3-color) !important; }
-.cs2s_color_quality_5  { color: var(--cs2s-quality-3-color) !important; }
+.cs2s_color_quality_3  { color: var(--cs2s-highlight-color) !important; }
 
 .cs2s_asset_wear {
 	position: absolute;
-	bottom: 0px;
-	right: 0px;
-	left: 0px;
+	bottom: 1px;
+	right: 1px;
+	left: 1px;
 	padding-right: 4px;
 	text-align: right;
 	text-overflow: ellipsis;
@@ -50,35 +47,11 @@
 	&::after {
 		content: "";
 		position: absolute;
-		top: 0;
-		right: 2px;
-		left: 2px;
-		height: 1px;
-		border-radius: 4px;
+		top: 0px;
+		right: 0px;
+		left: 0px;
+		height: 6px;
 		opacity: 85%;
-	}
-
-	.cs2s_asset_wear_name {
-		position: absolute;
-		z-index: 1;
-		bottom: 12px;
-		right: 6px;
-		font-size: 8pt;
-		font-weight: 800;
-		opacity: 95%;
-		text-shadow: 0px 2px 4px #000000bf;
-
-		&::before {
-			content: '';
-			position: absolute;
-			top: 4px;
-			left: -6px;
-			width: 0;
-			height: 0;
-			border: 8px solid transparent;
-			border-radius: 100%;
-			transform: rotate(315deg);
-		}
 	}
 
 	&.cs2s_asset_wear_fn {
@@ -88,19 +61,6 @@
 
 		&::after {
 			background: linear-gradient(180deg, color-mix(in srgb, var(--cs2s-wear-fn-color), transparent 40%), transparent);
-		}
-
-		.cs2s_asset_wear_name {
-			color: var(--cs2s-wear-fn-color);
-
-			&::before {
-				border-top-color: color-mix(in srgb, var(--cs2s-wear-fn-color), transparent 40%);
-				border-right-color: color-mix(in srgb, var(--cs2s-wear-fn-color), transparent 65%);
-			}
-
-			&::after {
-				background: linear-gradient(180deg, color-mix(in srgb, var(--cs2s-wear-fn-color), transparent 40%), transparent);
-			}
 		}
 	}
 
@@ -112,19 +72,6 @@
 		&::after {
 			background: linear-gradient(180deg, color-mix(in srgb, var(--cs2s-wear-mw-color), transparent 40%), transparent);
 		}
-
-		.cs2s_asset_wear_name {
-			color: var(--cs2s-wear-mw-color);
-
-			&::before {
-				border-top-color: color-mix(in srgb, var(--cs2s-wear-mw-color), transparent 40%);
-				border-right-color: color-mix(in srgb, var(--cs2s-wear-mw-color), transparent 65%);
-			}
-
-			&::after {
-				background: linear-gradient(180deg, color-mix(in srgb, var(--cs2s-wear-mw-color), transparent 40%), transparent);
-			}
-		}
 	}
 	&.cs2s_asset_wear_ft {
 		color: color-mix(in srgb, var(--cs2s-wear-ft-color), #cdcdcd 66%);
@@ -133,19 +80,6 @@
 
 		&::after {
 			background: linear-gradient(180deg, color-mix(in srgb, var(--cs2s-wear-ft-color), transparent 40%), transparent);
-		}
-
-		.cs2s_asset_wear_name {
-			color: var(--cs2s-wear-ft-color);
-
-			&::before {
-				border-top-color: color-mix(in srgb, var(--cs2s-wear-ft-color), transparent 40%);
-				border-right-color: color-mix(in srgb, var(--cs2s-wear-ft-color), transparent 65%);
-			}
-
-			&::after {
-				background: linear-gradient(180deg, color-mix(in srgb, var(--cs2s-wear-ft-color), transparent 40%), transparent);
-			}
 		}
 	}
 	&.cs2s_asset_wear_ww {
@@ -156,19 +90,6 @@
 		&::after {
 			background: linear-gradient(180deg, color-mix(in srgb, var(--cs2s-wear-ww-color), transparent 40%), transparent);
 		}
-
-		.cs2s_asset_wear_name {
-			color: var(--cs2s-wear-ww-color);
-
-			&::before {
-				border-top-color: color-mix(in srgb, var(--cs2s-wear-ww-color), transparent 40%);
-				border-right-color: color-mix(in srgb, var(--cs2s-wear-ww-color), transparent 65%);
-			}
-
-			&::after {
-				background: linear-gradient(180deg, color-mix(in srgb, var(--cs2s-wear-ww-color), transparent 40%), transparent);
-			}
-		}
 	}
 	&.cs2s_asset_wear_bs {
 		color: color-mix(in srgb, var(--cs2s-wear-bs-color), #cdcdcd 66%);
@@ -178,21 +99,9 @@
 		&::after {
 			background: linear-gradient(180deg, color-mix(in srgb, var(--cs2s-wear-bs-color), transparent 40%), transparent);
 		}
-
-		.cs2s_asset_wear_name {
-			color: var(--cs2s-wear-bs-color);
-
-			&::before {
-				border-top-color: color-mix(in srgb, var(--cs2s-wear-bs-color), transparent 40%);
-				border-right-color: color-mix(in srgb, var(--cs2s-wear-bs-color), transparent 65%);
-			}
-
-			&::after {
-				background: linear-gradient(180deg, color-mix(in srgb, var(--cs2s-wear-bs-color), transparent 40%), transparent);
-			}
-		}
 	}
 }
+
 .cs2s_asset_seed {
 	position: absolute;
 	top: 0px;
@@ -208,131 +117,108 @@
 	left: 0px;
 	bottom: 11px;
 	right: 6px;
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 15px 20px 0 0;
+	border-color: transparent;
+
+	&::before, &::after {
+		font-size: 8pt;
+		font-weight: 500;
+	}
 
 	&::before {
-		content: '';
 		position: absolute;
-		top: 0;
-		width: 0;
-		height: 0;
-		border-style: solid;
-		border-width: 15px 20px 0 0;
-		border-color: transparent;
+		left: 4px;
+		top: -15px;
+		text-shadow: 0px 2px 4px #00000044;
 	}
 
 	&::after {
 		position: absolute;
-		left: 1px;
-		top: 0;
-		padding: 0px 0px 1px 3px;
-		font-size: 8pt;
-		font-weight: 500;
-		text-shadow: 0px 2px 4px #000000bf;
+		top: -15px;
+		left: 17px;
 	}
 
 	&.cs2s_asset_stattrak {
-		&::before {
-			border-top-color: color-mix(in srgb, var(--cs2s-stattrak-color), transparent 65%) !important;
-		}
-
 		&::after {
 			color: var(--cs2s-stattrak-color) !important;
+			content: "StatTrak";
 		}
 	}
 
-	&.cs2s_asset_quality_3 {
+	&.cs2s_asset_unusual {
 		&::before {
-			border-top-color: color-mix(in srgb, var(--cs2s-quality-3-color), transparent 65%) !important;
-		}
-
-		&::after {
 			content: '★' !important;
-			color: var(--cs2s-quality-3-color) !important;
 		}
 	}
 
-	&.cs2s_asset_quality_12 {
-		&::before {
-			border-top-color: color-mix(in srgb, var(--cs2s-quality-12-color), transparent 65%) !important;
-		}
-
+	&.cs2s_asset_souvenir {
 		&::after {
-			color: var(--cs2s-quality-12-color) !important;
+			color: var(--cs2s-souvenir-color) !important;
+			content: "Souvenir";
 		}
 	}
 
 	&.cs2s_asset_rarity_7 {
-		&::before {
-			border-top-color: color-mix(in srgb, var(--cs2s-rarity-7-color), transparent 65%);
-		}
+		border-top-color: color-mix(in srgb, var(--cs2s-rarity-7-color), transparent 65%);
 
-		&::after {
+		&::before {
 			content: '7';
 			color: var(--cs2s-rarity-7-color);
 		}
 	}
 
 	&.cs2s_asset_rarity_6 {
-		&::before {
-			border-top-color: color-mix(in srgb, var(--cs2s-rarity-6-color), transparent 65%);
-		}
+		border-top-color: color-mix(in srgb, var(--cs2s-rarity-6-color), transparent 65%);
 
-		&::after {
+		&::before {
 			content: '6';
 			color: var(--cs2s-rarity-6-color);
 		}
 	}
 
 	&.cs2s_asset_rarity_5 {
-		&::before {
-			border-top-color: color-mix(in srgb, var(--cs2s-rarity-5-color), transparent 65%);
-		}
+		border-top-color: color-mix(in srgb, var(--cs2s-rarity-5-color), transparent 65%);
 
-		&::after {
+		&::before {
 			content: '5';
 			color: var(--cs2s-rarity-5-color);
 		}
 	}
 
 	&.cs2s_asset_rarity_4 {
-		&::before {
-			border-top-color: color-mix(in srgb, var(--cs2s-rarity-4-color), transparent 65%);
-		}
+		border-top-color: color-mix(in srgb, var(--cs2s-rarity-4-color), transparent 65%);
 
-		&::after {
+		&::before {
 			content: '4';
 			color: var(--cs2s-rarity-4-color);
 		}
 	}
 
 	&.cs2s_asset_rarity_3 {
-		&::before {
-			border-top-color: color-mix(in srgb, var(--cs2s-rarity-3-color), transparent 65%);
-		}
+		border-top-color: color-mix(in srgb, var(--cs2s-rarity-3-color), transparent 65%);
 
-		&::after {
+		&::before {
 			content: '3';
 			color: var(--cs2s-rarity-3-color);
 		}
 	}
 
 	&.cs2s_asset_rarity_2 {
-		&::before {
-			border-top-color: color-mix(in srgb, var(--cs2s-rarity-2-color), transparent 65%);
-		}
+		border-top-color: color-mix(in srgb, var(--cs2s-rarity-2-color), transparent 65%);
 
-		&::after {
+		&::before {
 			content: '2';
 			color: var(--cs2s-rarity-2-color);
 		}
 	}
 
 	&.cs2s_asset_rarity_1 {
-		&::before {
-			border-top-color: color-mix(in srgb, var(--cs2s-rarity-1-color), transparent 65%);
-		}
+		border-top-color: color-mix(in srgb, var(--cs2s-rarity-1-color), transparent 65%);
 
-		&::after {
+		&::before {
 			content: '1';
 			color: var(--cs2s-rarity-1-color);
 		}
@@ -555,6 +441,34 @@
 		border-width: 0px 5px 5px 5px;
 		border-color: transparent;
 		border-bottom-color: white;
+	}
+}
+
+.cs2s_descriptor_blue {
+	color: #b0c3d9;
+}
+
+.cs2s_button_row {
+	display: flex !important;
+	flex-direction: row !important;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.cs2s_small_grey_button {
+	background-color: #3d4450;
+	color: #ffffff;
+	height: 24px;
+	padding: 0px 12px;
+	border-radius: 2px;
+	display: inline-flex;
+	align-items: center;
+	transition-property: opacity,background,color,box-shadow;
+	transition-duration: .2s;
+	transition-timing-function: ease-out;
+
+	&:hover {
+		background-color: #67707b;
 	}
 }
 
@@ -954,11 +868,10 @@
 
 				&.cs2s_table_collection_column_quality_3::after {
 					content: "★";
-					color: var(--cs2s-quality-3-color);
 				}
 
 				&.cs2s_table_collection_column_quality_12::after {
-					color: var(--cs2s-quality-12-color);
+					color: var(--cs2s-souvenir-color);
 				}
 			}
 		}
@@ -1397,7 +1310,7 @@
 }
 
 .cs2s_settings_form {
-	overflow: scroll;
+	overflow-y: scroll;
 	padding: 0px 24px 24px 24px;
 	width: 900px;
 	max-height: 85vh;

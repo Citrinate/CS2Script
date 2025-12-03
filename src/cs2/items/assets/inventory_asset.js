@@ -4,15 +4,21 @@ import Asset from "@cs2/items/assets/asset.js";
 import Inventory from "@cs2/items/inventory.js";
 import Table from "@components/table.js";
 import { CreateElement } from "@utils/helpers.js";
+import Worker from '@utils/worker';
+import { QUALITIES, RARITIES } from "@cs2/constants";
 
 export default class InventoryAsset extends Asset {
 	_asset;
 
+	static #inventoryWorker = new Worker({
+		concurrentLimit: 100
+	});
+
 	constructor(asset) {
 		super();
 
-		this._assetid = asset.assetid;
 		this._asset = asset;
+		this._assetid = asset.assetid;
 
 		if (asset.description.market_hash_name == "Storage Unit") {
 			this._type = Asset.TYPE.STORAGE_UNIT;
@@ -28,10 +34,6 @@ export default class InventoryAsset extends Asset {
 			}
 		}
 
-		if (typeof this._type == "undefined") {
-			this._type = Asset.TYPE.OTHER;
-		}
-
 		if (this._type == Asset.TYPE.WEARABLE) {
 			for (const action of asset.description.actions) {
 				if (action.link.includes("steam://rungame")) {
@@ -42,156 +44,153 @@ export default class InventoryAsset extends Asset {
 		}
 	}
 
+	// Add additional information to each inventory item square
 	async BuildInventoryUI() {
-		// Add UI elements overtop of each item in the inventory
+		// Weapon Skins
 		if (this.ShouldInspect() && GetSetting(SETTING_INSPECT_ITEMS)) {
-			// Weapon skins
-			const build = () => {
-				if (!this._inspectData) {
-					return;
+			const float = parseFloat(this.GetProperty(2)?.float_value);
+			const seed = this.GetProperty(1)?.int_value;
+			const rarity = RARITIES[this.GetTags("Rarity")[0]?.internal_name];
+			const qualities = this.GetTags("Quality").map(tag => QUALITIES[tag.internal_name]);
+			const unusual = qualities.includes(3);
+			const stattrak = qualities.includes(9);
+			const souvenir = qualities.includes(12);
+			const keychainInfo = this.GetDescription("keychain_info");
+			const stickerInfo = this.GetDescription("sticker_info");
+
+			// Build elements
+			let floatElement;
+			if (float || float === 0) {
+				floatElement = CreateElement("div", {
+					class: `cs2s_asset_wear cs2s_asset_wear_${Asset.GetWear(float).name.toLowerCase()}`,
+					text: float.toFixed(11)
+				});
+
+				this._asset.element.append(floatElement);
+			}
+
+			if (seed || seed === 0) {
+				this._asset.element.append(
+					CreateElement("div", {
+						class: "cs2s_asset_seed",
+						text: seed
+					})
+				);
+			}
+
+			if (rarity || rarity === 0) {
+				const rarityElement = CreateElement("div", {
+					class: `cs2s_asset_rarity cs2s_asset_rarity_${rarity}`
+				});
+
+				if (unusual) {
+					rarityElement.classList.add("cs2s_asset_unusual");
 				}
 
-				if (this._inspectData.wear && this._wearData) {
-					this._asset.element.append(
-						CreateElement("div", {
-							class: `cs2s_asset_wear cs2s_asset_wear_${this._wearData.name.toLowerCase()}`,
-							text: this._inspectData.wear.toFixed(6),
-							children: [
-								" ",
-								this._GetPercentileElement(),
-								// createElement("div", {
-								// 	class: "cs2s_asset_wear_name",
-								// 	text: this._wearData.name
-								// })
-							]
-						})
-					);
+				if (stattrak) {
+					rarityElement.classList.add("cs2s_asset_stattrak");
 				}
 
-				if (this._inspectData.seed) {
-					this._asset.element.append(
-						CreateElement("div", {
-							class: "cs2s_asset_seed",
-							text: this._inspectData.seed
-						})
-					);
+				if (souvenir) {
+					rarityElement.classList.add("cs2s_asset_souvenir");
 				}
 
-				if (this._inspectData.rarity) {
-					const el = CreateElement("div", {
-						class: `cs2s_asset_rarity cs2s_asset_rarity_${this._inspectData.rarity} cs2s_asset_quality_${this._inspectData.quality}`
-					});
+				this._asset.element.append(rarityElement);
+			}
 
-					if (this._inspectData.stattrak) {
-						el.classList.add("cs2s_asset_stattrak");
+			if (keychainInfo || stickerInfo) {
+				const keychainsElements = [];
+				if (keychainInfo) {
+					const parser = new DOMParser();
+					const doc = parser.parseFromString(keychainInfo, 'text/html');
+
+					for (const img of doc.querySelectorAll('img')) {
+						keychainsElements.push(CreateElement("img", {
+							src: img.src
+						}));
 					}
-
-					this._asset.element.append(el);
 				}
 
-				const cosmetics = [];
+				const stickerElements = [];
+				if (stickerInfo) {
+					const parser = new DOMParser();
+					const doc = parser.parseFromString(stickerInfo, 'text/html');
 
-				for (const description of this._asset.description.descriptions) {
-					if (description.name == "sticker_info" || description.name == "keychain_info") {
-						const parser = new DOMParser();
-						const doc = parser.parseFromString(description.value, 'text/html');
-
-						for (const img of doc.querySelectorAll('img')) {
-							cosmetics.push(CreateElement("img", {
-								src: img.src
-							}));
-						}
+					for (const img of doc.querySelectorAll('img')) {
+						stickerElements.push(CreateElement("img", {
+							src: img.src
+						}));
 					}
 				}
 
-				if (cosmetics.length > 0) {
+				if (keychainsElements.length > 0 || stickerElements.length > 0) {
 					this._asset.element.append(
 						CreateElement("div", {
 							class: "cs2s_asset_cosmetics",
-							children: cosmetics
+							children: [...keychainsElements, ...stickerElements]
 						})
 					);
 				}
 			}
 
-			let cached;
-			try {
-				cached = await this._Inspect({ cacheOnly: true });
-			} catch (e) {
-				Script.ShowError({ level: ERROR_LEVEL.MEDIUM }, e);
-
-				return;
-			}
-
-			if (cached) {
-				build();
-			} else {
-				Asset._inspectionWorker.Add(async () => {
-					try {
-						await this._Inspect();
-					} catch (e) {
-						Script.ShowError({ level: ERROR_LEVEL.MEDIUM }, e);
-	
+			// Inspect item
+			{
+				const build = () => {
+					if (!this._inspectData) {
 						return;
 					}
 
-					build();
-				});
-
-				Asset._inspectionWorker.Run();
-			}
-		} else if (this._type == Asset.TYPE.KEYCHAIN && GetSetting(SETTING_INSPECT_ITEMS)) {
-			// Key chains
-			let template;
-
-			for (const description of this._asset.description.descriptions) {
-				if (description.name == "attr: keychain slot 0 seed") {
-					const matches = description.value.match(/\d+/); // Matches digits in: Charm Template: 1234
-					if (matches) {
-						template = matches[0];
+					// Update float element with percentile info
+					if (floatElement && this._inspectData.wear && this._wearData) {
+						floatElement.innerText = this._inspectData.wear.toFixed(6);
+						floatElement.append(" ", this._GetPercentileElement());
 					}
+				}
 
-					break;
+				let cached;
+				try {
+					cached = await this._Inspect({ cacheOnly: true });
+				} catch (e) {
+					Script.ShowError({ level: ERROR_LEVEL.MEDIUM }, e);
+
+					return;
+				}
+
+				if (cached) {
+					build();
+				} else {
+					Asset._inspectionWorker.Add(async () => {
+						try {
+							await this._Inspect();
+						} catch (e) {
+							Script.ShowError({ level: ERROR_LEVEL.MEDIUM }, e);
+		
+							return;
+						}
+
+						build();
+					});
+
+					Asset._inspectionWorker.Run();
 				}
 			}
+		}
+		// Charms
+		else if (this._type == Asset.TYPE.KEYCHAIN && GetSetting(SETTING_INSPECT_ITEMS)) {
+			const template = this.GetProperty(3)?.int_value;
 
 			if (template) {
-				this._asset.element.appendChild(
+				this._asset.element.append(
 					CreateElement("div", {
 						class: "cs2s_asset_seed",
 						text: template
 					})
 				);
 			}
-		} else if (this._type == Asset.TYPE.STORAGE_UNIT) {
-			// Storage units
-			let nameTag;
-			let itemCount;
-
-			for (const description of this._asset.description.descriptions) {
-				if (description.name == "nametag") {
-					const matches = description.value.match(/.*?''(.*?)''/); // Matches name in: Name Tag: ''Name''
-
-					if (matches) {
-						nameTag = matches[1];
-					}
-				} else if (description.name == "attr: items count") {
-					const matches = description.value.match(/\d+/); // Matches number in: Number of Items: 1000
-
-					if (matches) {
-						itemCount = matches[0];
-					}
-				}
-			}
-
-			if (nameTag) {
-				this._asset.element.append(
-					CreateElement("div", {
-						class: "cs2s_asset_name",
-						text: nameTag
-					})
-				);
-			}
+		}
+		// Storage Units
+		else if (this._type == Asset.TYPE.STORAGE_UNIT) {
+			const itemCount = this.GetDescription("attr: items count", /\d+/)[0]; // Matches digits in: Number of Items: 1000
 
 			if (itemCount) {
 				this._asset.element.append(
@@ -201,19 +200,41 @@ export default class InventoryAsset extends Asset {
 					})
 				);
 			}
+
+			// Wait for inventory to load
+			InventoryAsset.#inventoryWorker.Add(async () => {
+				const inventory = await Script.GetInventory();
+				if (!(inventory instanceof Inventory)) {
+					return;
+				}
+
+				// Add name tag element
+				const nameTag = inventory.items.find(x => x.iteminfo.id == this._assetid)?.attributes["custom name attr"];
+
+				if (nameTag) {
+					this._asset.element.append(
+						CreateElement("div", {
+							class: "cs2s_asset_name",
+							text: nameTag
+						})
+					);
+				}
+			});
+
+			InventoryAsset.#inventoryWorker.Run();
 		}
 	}
 
+	// Add additional information the currently selected inventory item
 	async BuildSelectedUI() {
-		// Add UI elements to the currently selected item in the inventory
 		const selectedItem = unsafeWindow.iActiveSelectView;
-		const descriptionsElement = unsafeWindow.document.getElementById(`iteminfo${selectedItem}`).children[0].children[0].children[0].children[0].children[0].children[4];
+		const descriptionsElement = unsafeWindow.document.getElementById(`iteminfo${selectedItem}`).querySelector(":scope > div > div > div > div > div > div:nth-child(5)");
 		const stickerElements = descriptionsElement.getElementsBySelector("#sticker_info img");
 		const charmElements = descriptionsElement.getElementsBySelector("#keychain_info img");
-		const ownerActionsElement = unsafeWindow.document.getElementById(`iteminfo${selectedItem}`).children[0].children[0].children[0].children[0].children[0].children[5];
+		const ownerActionsElement = unsafeWindow.document.getElementById(`iteminfo${selectedItem}`).querySelector(":scope > div > div > div > div > div > div:nth-child(7)");
 
+		// Weapon skins
 		if (this.ShouldInspect() && GetSetting(SETTING_INSPECT_ITEMS)) {
-			// Weapon skins
 			const build = () => {
 				if (selectedItem != unsafeWindow.iActiveSelectView
 					|| this._asset != unsafeWindow.g_ActiveInventory.selectedItem
@@ -226,7 +247,7 @@ export default class InventoryAsset extends Asset {
 					descriptionsElement.prepend(
 						this._GetWearRangeElement(),
 						CreateElement("div", {
-							class: "descriptor",
+							class: "cs2s_descriptor cs2s_element",
 							text: `Float: ${this._inspectData.wear.toFixed(14)}`,
 							children: [
 								" ",
@@ -234,11 +255,11 @@ export default class InventoryAsset extends Asset {
 							]
 						}),
 						CreateElement("div", {
-							class: "descriptor",
+							class: "cs2s_descriptor cs2s_element",
 							text: `Seed: ${this._inspectData.seed}`
 						}),
 						CreateElement("div", {
-							class: "descriptor",
+							class: "cs2s_descriptor cs2s_element",
 							text: "\u00A0"
 						})
 					);
@@ -252,7 +273,7 @@ export default class InventoryAsset extends Asset {
 
 						stickerElements[i].wrap(
 							CreateElement("span", {
-								class: "cs2s_asset_sticker_wear",
+								class: "cs2s_asset_sticker_wear cs2s_element",
 								wear: Math.round(this._inspectData.stickers[i] * 100)
 							})
 						);
@@ -263,7 +284,7 @@ export default class InventoryAsset extends Asset {
 					if (typeof charmElements[0] != "undefined") {
 						charmElements[0].wrap(
 							CreateElement("span", {
-								class: "cs2s_asset_charm_template",
+								class: "cs2s_asset_charm_template cs2s_element",
 								template: this._inspectData.charm
 							})
 						);
@@ -299,12 +320,13 @@ export default class InventoryAsset extends Asset {
 
 				Asset._inspectionWorker.Run();
 			}
-		} else if (this._type == Asset.TYPE.STORAGE_UNIT) {
-			// Storage units
-			ownerActionsElement.style.display = "block";
+		}
+		// Storage units
+		else if (this._type == Asset.TYPE.STORAGE_UNIT) {
+			ownerActionsElement.classList.add("cs2s_button_row");
 			ownerActionsElement.append(
 				CreateElement("a", {
-					class: "btn_small btn_grey_white_innerfade",
+					class: "cs2s_small_grey_button cs2s_element",
 					html: "<span>Retrieve Items</span>",
 					onclick: async () => {
 						const inventory = await Script.GetInventory({ showProgress: true });
@@ -340,7 +362,7 @@ export default class InventoryAsset extends Asset {
 					}
 				}),
 				CreateElement("a", {
-					class: "btn_small btn_grey_white_innerfade",
+					class: "cs2s_small_grey_button cs2s_element",
 					html: "<span>Deposit Items</span>",
 					onclick: async () => {
 						const inventory = await Script.GetInventory({ showProgress: true });
@@ -375,6 +397,78 @@ export default class InventoryAsset extends Asset {
 					}
 				})
 			);
+
+			InventoryAsset.#inventoryWorker.Add(async () => {
+				const inventory = await Script.GetInventory();
+				if (!(inventory instanceof Inventory)) {
+					return;
+				}
+
+				// Display storage unit name
+				const nameTag = inventory.items.find(x => x.iteminfo.id == this._assetid)?.attributes["custom name attr"];
+				if (nameTag) {
+					descriptionsElement.prepend(
+						CreateElement("div", {
+							class: "cs2s_descriptor_blue cs2s_element",
+							text: `Name Tag: "${nameTag}"`
+						}),
+						CreateElement("div", {
+							class: "cs2s_descriptor cs2s_element",
+							text: "\u00A0"
+						})
+					);
+				}
+			});
+
+			InventoryAsset.#inventoryWorker.Run();
 		}
+	}
+
+	GetDescription(name, regex = null) {
+		if (!this._asset.description?.descriptions) {
+			return;
+		}
+
+		for (const description of this._asset.description.descriptions) {
+			if (description.name == name) {
+				if (regex) {
+					const matches = description.value.match(regex);
+					if (!matches) {
+						return null;
+					}
+
+					return matches;
+				}
+
+				return description.value;
+			}
+		}
+	}
+
+	GetProperty(id) {
+		if (!this._asset.asset_properties) {
+			return;
+		}
+
+		for (const property of this._asset.asset_properties) {
+			if (property.propertyid == id) {
+				return property;
+			}
+		}
+	}
+
+	GetTags(category) {
+		if (!this._asset.description?.tags) {
+			return;
+		}
+
+		let tags = [];
+		for (const tag of this._asset.description.tags) {
+			if (tag.category == category) {
+				tags.push(tag);
+			}
+		}
+
+		return tags;
 	}
 }

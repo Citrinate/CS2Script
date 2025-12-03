@@ -197,3 +197,24 @@ export function Sleep(milliseconds) {
 export function Random(min, max) {
 	return Math.random() * (max - min) + min;
 }
+
+export function WaitForElm(selector) {
+	// https://stackoverflow.com/a/61511955
+	return new Promise(resolve => {
+		if (document.querySelector(selector)) {
+			return resolve(document.querySelector(selector));
+		}
+
+		const observer = new MutationObserver(() => {
+			if (document.querySelector(selector)) {
+				observer.disconnect();
+				resolve(document.querySelector(selector));
+			}
+		});
+
+		observer.observe(document.documentElement, {
+			childList: true,
+			subtree: true
+		});
+	});
+}
