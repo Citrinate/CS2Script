@@ -281,8 +281,8 @@ export default class ItemTable {
 				if (!Script.Bot?.Plugin?.Connected) {
 					Script.ShowStartInterfacePrompt({
 						message: this.#mode === ItemTable.MODE.RETRIEVE
-							? "Interface must running to retrieve items"
-							: "Interface must running to store items",
+							? "Interface must be running to retrieve items"
+							: "Interface must be running to store items",
 						autoClose: true,
 						popoverMode: true,
 						fade: false,

@@ -4,6 +4,7 @@ import Asset from "@cs2/items/assets/asset.js";
 import { CreateElement } from "@utils/helpers.js";
 
 export default class MarketAsset extends Asset {
+	_asset;
 	_listingid;
 
 	static #builtItemPageUI = false;
@@ -11,6 +12,7 @@ export default class MarketAsset extends Asset {
 	constructor(asset, listing) {
 		super();
 
+		this._asset = asset;
 		this._assetid = asset.id;
 		this._listingid = listing?.listingid;
 
@@ -19,10 +21,6 @@ export default class MarketAsset extends Asset {
 				this._type = Asset.TYPE.WEARABLE;
 				break;
 			}
-		}
-
-		if (typeof this._type == "undefined") {
-			this._type = Asset.TYPE.OTHER;
 		}
 
 		if (this._type == Asset.TYPE.WEARABLE) {
@@ -35,52 +33,59 @@ export default class MarketAsset extends Asset {
 		}
 	}
 
+	// Add additional information to each individual listing
 	async BuildListingUI() {
-		if (this.ShouldInspect() && GetSetting(SETTING_INSPECT_ITEMS)) {
+		const listingDetailsElement = unsafeWindow.document.getElementById(`listing_${this._listingid}_details`);
+		const stickerElements = listingDetailsElement.getElementsBySelector("#sticker_info img");
+		const charmElements = listingDetailsElement.getElementsBySelector("#keychain_info img");
+
+		// Weapon skins
+		if (this.ShouldInspect() && GetSetting(SETTING_INSPECT_ITEMS)) {				
+			const float = parseFloat(this.GetProperty(2)?.float_value);
+			const seed = this.GetProperty(1)?.int_value;
+
+			// Build elements
+			let floatElement;
+			if ((float || float === 0) && (seed || seed === 0)) {
+				floatElement = CreateElement("div", {
+					text: `Float: ${float.toFixed(14)}`
+				});
+
+				listingDetailsElement.prepend(
+					CreateElement("div", {
+						class: "cs2s_listing_info",
+						children: [
+							floatElement,
+							CreateElement("div", {
+								text: `Seed: ${seed}`
+							})
+						]
+					})
+				);
+			}
+
+			// Inspect item
 			const build = () => {
 				if (!this._inspectData) {
 					return;
 				}
 
-				const listingDetailsElement = unsafeWindow.document.getElementById(`listing_${this._listingid}_details`);
-				
-				if (!listingDetailsElement) {
+				this.#BuildItemPageUI();
+
+				if (!listingDetailsElement.isConnected) {
+					// Listing is no longer visible
 					return;
 				}
 
-				if (listingDetailsElement.getElementsBySelector(".cs2s_listing_info").length != 0) {
-					// Already built the UI for this listing
-					return;
-				}
-
-				const stickerElements = listingDetailsElement.getElementsBySelector("#sticker_info img");
-				const charmElements = listingDetailsElement.getElementsBySelector("#keychain_info img");
-
-				if (this._inspectData.wear && this._inspectData.seed) {
-					if (!MarketAsset.#builtItemPageUI) {
-						MarketAsset.#builtItemPageUI = true;
-						this.#BuiltItemPageUI();
+				// Update float element with percentile info
+				if (floatElement && this._inspectData.wear && this._inspectData.seed) {
+					if (floatElement && this._inspectData.wear && this._wearData) {
+						floatElement.innerText = `Float: ${this._inspectData.wear.toFixed(14)}`;
+						floatElement.append(" ", this._GetPercentileElement({ showTooltip: true, rounded: false }));
 					}
-
-					listingDetailsElement.prepend(
-						CreateElement("div", {
-							class: "cs2s_listing_info",
-							children: [
-								CreateElement("div", {
-									text: `Float: ${this._inspectData.wear.toFixed(14)}`,
-									children: [
-										" ",
-										this._GetPercentileElement({ showTooltip: true, rounded: false })
-									]
-								}),
-								CreateElement("div", {
-									text: `Seed: ${this._inspectData.seed}`
-								})
-							]
-						})
-					);
 				}
 
+				// Add wear % to stickers
 				if (this._inspectData.stickers) {
 					for (let i = 0; i < this._inspectData.stickers.length; i++) {
 						if (typeof stickerElements[i] == "undefined") {
@@ -96,6 +101,7 @@ export default class MarketAsset extends Asset {
 					}
 				}
 
+				// Add template # to charm
 				if (this._inspectData.charm) {
 					if (typeof charmElements[0] != "undefined") {
 						charmElements[0].wrap(
@@ -121,13 +127,6 @@ export default class MarketAsset extends Asset {
 				build();
 			} else {
 				Asset._inspectionWorker.Add(async () => {
-					const listingDetailsElement = unsafeWindow.document.getElementById(`listing_${this._listingid}_details`);
-				
-					if (!listingDetailsElement) {
-						// Listing is no longer visisble
-						return;
-					}
-
 					try {
 						await this._Inspect();
 					} catch (e) {
@@ -144,12 +143,31 @@ export default class MarketAsset extends Asset {
 		}
 	}
 
-	#BuiltItemPageUI() {
+	// Add general item information to the top of the page
+	#BuildItemPageUI() {
+		if (MarketAsset.#builtItemPageUI) {
+			return;
+		}
+
+		MarketAsset.#builtItemPageUI = true;
+
 		if (this._inspectData.wear && this._inspectData.seed) {
-			const descriptionsElement = unsafeWindow.document.getElementById(`largeiteminfo_item_descriptors`);
+			const descriptionsElement = unsafeWindow.document.querySelector(".largeiteminfo_react_placeholder > div > div > div > div > div:nth-child(2) > div:nth-child(3)");
 
 			if (descriptionsElement) {
 				descriptionsElement.prepend(this._GetWearRangeElement(true));
+			}
+		}
+	}
+
+	GetProperty(id) {
+		if (!this._asset.asset_properties) {
+			return;
+		}
+
+		for (const property of this._asset.asset_properties) {
+			if (property.propertyid == id) {
+				return property;
 			}
 		}
 	}

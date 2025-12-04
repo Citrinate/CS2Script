@@ -213,3 +213,24 @@ export function CompareVersions(v1, v2) {
 
 	return 0;
 }
+
+export function WaitForElm(selector) {
+	// https://stackoverflow.com/a/61511955
+	return new Promise(resolve => {
+		if (document.querySelector(selector)) {
+			return resolve(document.querySelector(selector));
+		}
+
+		const observer = new MutationObserver(() => {
+			if (document.querySelector(selector)) {
+				observer.disconnect();
+				resolve(document.querySelector(selector));
+			}
+		});
+
+		observer.observe(document.documentElement, {
+			childList: true,
+			subtree: true
+		});
+	});
+}
