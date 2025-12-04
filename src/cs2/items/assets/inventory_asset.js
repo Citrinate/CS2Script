@@ -331,6 +331,12 @@ export default class InventoryAsset extends Asset {
 					return;
 				}
 
+				if (selectedItem != unsafeWindow.iActiveSelectView
+					|| this._asset != unsafeWindow.g_ActiveInventory.selectedItem
+				) {
+					return;
+				}
+
 				// Display storage unit name
 				const nameTag = inventory.items.find(x => x.iteminfo.id == this._assetid)?.attributes["custom name attr"];
 				if (nameTag) {

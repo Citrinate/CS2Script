@@ -1310,7 +1310,7 @@
 }
 
 .cs2s_settings_form {
-	overflow-y: scroll;
+	overflow-y: auto;
 	padding: 0px 24px 24px 24px;
 	width: 900px;
 	max-height: 85vh;
