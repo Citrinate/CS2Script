@@ -621,6 +621,21 @@
 	}
 }
 
+.cs2s_table_title_item {
+	color: #919191;
+	&::before {
+		content: "";
+		background: var(--image-url);
+		width: 66px;
+		height: 45px;
+		display: inline-block;
+		vertical-align: middle;
+		filter: drop-shadow(0px 0px 0px #bdbdbd) drop-shadow(2px 4px 6px #1c1c23);
+		background-repeat: no-repeat;
+		padding-right: 6px;
+	}
+}
+
 .cs2s_table_title_casket {
 	color: #919191;
 	&::before {
@@ -690,6 +705,47 @@
 		width: 230px;
 		padding-right: 20px;
 		white-space: nowrap;
+	}
+
+	.cs2s_table_store_name_column {
+		width: 475px;
+	}
+
+	.cs2s_table_store_type_stage_column {
+		width: 325px;
+	}
+
+	.cs2s_table_store_price_team_column {
+		width: 375px;
+
+		.cs2s_table_store_discount {
+			margin-right: 4px;
+
+			.cs2s_table_store_discount_percentage {
+				background: linear-gradient(to bottom, #0fa45a, #24955d);
+        		border: 1px solid #0fa45a;
+				font-weight: 600;
+				color: #e8e8e8;
+				padding: 4px;
+				margin-right: 4px;
+			}
+
+			.cs2s_table_store_discount_original_price {
+				position: relative;
+				color: #738895;
+				font-size: 8pt;
+
+				&:before {
+					content: '';
+					left: -2px;
+					right: -2px;
+					position: absolute;
+					top: 49%;
+					border-bottom: 1.5px solid;
+					transform: skewY(-10deg);
+				}
+			}
+		}
 	}
 
 	td {
@@ -1084,11 +1140,11 @@
 }
 
 .cs2s_table_footer_element_left > * {
-	margin-right: 16px;
+	margin-right: 24px;
 }
 
 .cs2s_table_footer_element_right > * {
-	margin-left: 16px;
+	margin-left: 24px;
 }
 
 .cs2s_table_footer_selection_count {
@@ -1109,6 +1165,11 @@
 	opacity: 95%;
 	cursor: pointer;
 	user-select: none;
+
+	&.cs2s_table_footer_action_link_no_icon {
+		padding-left: 24px;
+		padding-right: 24px;
+	}
 
 	&.cs2s_table_footer_action_link_active {
 		background: #3a8dde;
@@ -1256,8 +1317,7 @@
 }
 
 .cs2s_action_message_tall {
-	padding-top: 8px;
-	padding-bottom:12px;
+	padding: 8px 64px 12px;
 }
 
 .cs2s_action_multi_message {

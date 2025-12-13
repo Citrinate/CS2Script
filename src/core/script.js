@@ -4,10 +4,11 @@ import Inventory from '@cs2/items/inventory';
 import Popup from '@components/popup';
 import Cache from '@utils/cache';
 import { CreateElement, BindTooltip, Fade, Sleep, CreateCachedAsyncFunction, CompareVersions } from '@utils/helpers.js';
+import Store from '@cs2/items/store';
 
 export const OPERATION_ERROR = {
 	INTERFACE_NOT_CONNECTED: 0,
-	INVENTORY_FAILED_TO_LOAD: 1,
+	FAILED_TO_LOAD: 1
 };
 
 export const ERROR_LEVEL = {
@@ -23,6 +24,7 @@ class Script {
 	AccountsConnected = 0;
 
 	#inventory = null;
+	#store = null;
 	#statusUpdateListeners = [];
 
 	#navigationButton;
@@ -125,7 +127,7 @@ class Script {
 		this.#statusUpdateListeners.push(listener);
 	}
 
-	RemovetatusUpdateListener(listener) {
+	RemoveStatusUpdateListener(listener) {
 		this.#statusUpdateListeners = this.#statusUpdateListeners.filter(x => x !== listener);
 	}
 
@@ -735,12 +737,20 @@ class Script {
 	async GetInventory(options = {}) {
 		if (this.#inventory === null) {
 			const progressMessage = CreateElement("div", {
-				class: "cs2s_action_message",
+				class: "cs2s_action_message"
 			});
 
 			const progressBar = CreateElement("div", {
 				class: "cs2s_action_progress_bar",
+				vars: {
+					"percentage": "0%"
+				}
 			});
+
+			const progressCallback = (message, progress) => {
+				progressMessage.innerText = message;
+				progressBar.style.setProperty("--percentage", `${(progress * 100).toFixed(0)}%`);
+			};
 
 			this.GetInventory.closeButton = CreateElement("div", {
 				class: "cs2s_grey_long_button",
@@ -768,14 +778,18 @@ class Script {
 
 						if (status && status.Connected && status.InventoryLoaded) {
 							if (!status.InventoryLoaded) {
+								progressCallback("Waiting for inventory to load", 0);
 								do {
 									await Sleep(1000);
 									status = await ASF.GetPluginStatus(this.Bot.ASF.BotName);
-								} while (status && status.Connected && !status.InventoryLoaded)
+								} while (status && status.Connected && !status.InventoryLoaded);
+								progressCallback("Waiting for inventory to load", 1);
 							}
 
 							if (status && status.Connected && status.InventoryLoaded) {
+								progressCallback("Fetching inventory items", 0);
 								const itemList = await ASF.Send("CS2Interface", "Inventory", "GET", this.Bot.ASF.BotName);
+								progressCallback("Fetching inventory items", 1);
 
 								if (itemList) {
 									inventory = new Inventory(itemList);
@@ -785,7 +799,7 @@ class Script {
 							}
 						}
 					} catch (e) {
-						this.ShowError({ level: ERROR_LEVEL.LOW }, e);
+						this.ShowError({ level: ERROR_LEVEL.MEDIUM }, e);
 					}
 				}
 
@@ -798,16 +812,13 @@ class Script {
 				}
 
 				try {
-					await inventory.LoadCrateContents((message, progress) => {
-						progressMessage.innerText = message;
-						progressBar.style.setProperty("--percentage", `${(progress * 100).toFixed(0)}%`);
-					});
+					await inventory.LoadCrateContents(progressCallback);
 
 					return inventory;
 				} catch (e) {
 					this.ShowError({ level: ERROR_LEVEL.MEDIUM }, e);
 
-					return e.OPERATION_ERROR ?? OPERATION_ERROR.INVENTORY_FAILED_TO_LOAD;
+					return e.OPERATION_ERROR ?? OPERATION_ERROR.FAILED_TO_LOAD;
 				}
 			});
 		}
@@ -831,20 +842,143 @@ class Script {
 			popup.Show();
 		}
 
-		const success = await this.#inventory() !== undefined;
+		const result = await this.#inventory();
 
-		if (cancelled || !success) {
+		if (cancelled || result === undefined) {
 			return;
 		}
 
+		const success = result instanceof Inventory;
+
 		if (options.showProgress && !alreadyFinished) {
 			// wait for the final animation to finish
-			await Sleep(500);
+			if (success) {
+				await Sleep(500);
+			}
 
 			popup.Hide();
 		}
 
 		return await this.#inventory();
+	}
+
+	async GetStore(options = {}) {
+		if (this.#store === null 
+			|| (this.#store.willReturnImmediately() && await this.#store() === OPERATION_ERROR.INTERFACE_NOT_CONNECTED)
+		) {
+			const progressMessage = CreateElement("div", {
+				class: "cs2s_action_message",
+			});
+
+			const progressBar = CreateElement("div", {
+				class: "cs2s_action_progress_bar",
+				vars: {
+					"percentage": "0%"
+				}
+			});
+
+			const progressCallback = (message, progress) => {
+				progressMessage.innerText = message;
+				progressBar.style.setProperty("--percentage", `${(progress * 100).toFixed(0)}%`);
+			};
+
+			this.GetStore.closeButton = CreateElement("div", {
+				class: "cs2s_grey_long_button",
+				text: "Close"
+			});
+
+			this.GetStore.progressBody = CreateElement("div", {
+				class: "cs2s_action_body",
+				children: [
+					progressMessage,
+					progressBar,
+					this.GetStore.closeButton
+				]
+			});
+
+			this.#store = CreateCachedAsyncFunction(async () => {
+				if (this.AccountsConnected == 0) {
+					return OPERATION_ERROR.INTERFACE_NOT_CONNECTED;
+				}
+
+				let store;
+				try {
+					progressCallback("Fetching store items", 0);
+
+					const storeData = await ASF.Send("CS2Interface", "GetStoreData", "GET", "ASF");
+
+					if (storeData) {
+						// If any items need supplimentalData, get that also
+						let tournamentData = null;
+						// There should only be 1 matching item here: the individual tournament souvenir package
+						const item = Object.values(storeData.price_sheet_items).find(item => item.requires_supplemental_data);
+						if (item && item.tournament_id) {
+							progressCallback("Fetching store items", 0.5);
+
+							tournamentData = await ASF.Send("CS2Interface", `GetTournamentInfo/${item.tournament_id}`, "GET", "ASF");
+						}
+
+						store = new Store(storeData, tournamentData);
+					}
+
+					progressCallback("Fetching store items", 1);
+				} catch (e) {
+					this.ShowError({ level: ERROR_LEVEL.MEDIUM }, e);
+				}
+
+				if (!store) {
+					return OPERATION_ERROR.FAILED_TO_LOAD;
+				}
+
+				try {
+					await store.LoadStoreContents(progressCallback);
+				} catch (e) {
+					this.ShowError({ level: ERROR_LEVEL.MEDIUM }, e);
+
+					return e.OPERATION_ERROR ?? OPERATION_ERROR.FAILED_TO_LOAD;
+				}
+
+				return store;
+			});
+		} 
+
+		let cancelled = false;
+
+		const popup = new Popup({
+			title: "Loading Store",
+			body: [this.GetStore.progressBody],
+			simpleMode: true,
+			onclose: () => {
+				cancelled = true;
+			}
+		});
+
+		this.GetStore.closeButton.onclick = () => { popup.Hide(); };
+
+		const alreadyFinished = this.#store.willReturnImmediately();
+
+		if (options.showProgress && !alreadyFinished) {
+			popup.Show();
+		}
+
+		const result = await this.#store();
+
+		if (cancelled || result === undefined) {
+			return;
+		}
+
+		const success = result instanceof Store;
+
+		if (options.showProgress && !alreadyFinished) {
+			// wait for the final animation to finish
+			if (success) {
+				await Sleep(500);
+			}
+
+			popup.Hide();
+		}
+
+		return await this.#store();
 	}
 }
 

@@ -1,6 +1,7 @@
 export const CS2_APPID = 730;
 export const INVENTORY_ITEM_LIMIT = 1000;
 export const STORAGE_UNIT_ITEM_LIMIT = 1000;
+export const MAX_PURCHASE_QUANTITY = 20;
 export const STICKER_MAX_COUNT = 5;
 export const KEYCHAIN_MAX_COUNT = 1;
 export const SEED_RANGE = { min: 0, max: 100000 }
@@ -57,3 +58,14 @@ export const RARITIES = {
 	"Unusual": 99,
 	"Rarity_Unusual": 99
 };
+export const TOURNAMENT_MAPS = {
+	2: "Dust II",
+	3: "Train",
+	5: "Inferno",
+	6: "Nuke",
+	7: "Vertigo",
+	23: "Mirage",
+	32: "Overpass",
+	91: "Anubis",
+	101: "Ancient"
+}

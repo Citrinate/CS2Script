@@ -4,8 +4,11 @@ import Inventory from '@cs2/items/inventory.js';
 import InventoryAsset from '@cs2/items/assets/inventory_asset.js';
 import ItemTable from '@components/item_table';
 import { CreateElement, WaitForElm } from '@utils/helpers.js';
+import StoreTable from '@components/store_table';
+import Store from '@cs2/items/store';
 
 export function HandleShowItemInventory() {
+	// Preload inventory from interface
 	const initInventory = () => {
 		if (initInventory.initialized) {
 			return;
@@ -15,6 +18,7 @@ export function HandleShowItemInventory() {
 		Script.GetInventory();
 	};
 
+	// Show "open all storage units" button
 	const allCratesButton = CreateElement("a", {
 		class: "btn_darkblue_white_innerfade btn_medium",
 		style: {
@@ -33,7 +37,7 @@ export function HandleShowItemInventory() {
 				return;
 			}
 
-			if (inventory === OPERATION_ERROR.INVENTORY_FAILED_TO_LOAD) {
+			if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
 				Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
 
 				return;
@@ -53,14 +57,48 @@ export function HandleShowItemInventory() {
 		}
 	});
 
+	// Show "Store" button
+	const storeButton = CreateElement("a", {
+		class: "btn_darkblue_white_innerfade btn_medium",
+		style: {
+			marginRight: "12px"
+		},
+		html: "<span>View Store</span>",
+		onclick: async () => {
+			const store = await Script.GetStore({ showProgress: true });
+
+			if (store === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
+				Script.ShowStartInterfacePrompt({
+					message: "Interface must be running on one of your accounts to view the in-game store.",
+					fade: false
+				});
+
+				return;
+			}
+
+			if (store === OPERATION_ERROR.FAILED_TO_LOAD) {
+				Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Store failed to load, check error logs and refresh the page to try again"));
+
+				return;
+			}
+
+			if (!(store instanceof Store)) {
+				return;
+			}
+
+			const table = new StoreTable(store);
+
+			table.Show();
+		}
+	});
+
 	const handler = (appid) => {
 		if (appid == CS2_APPID) {
-			// Preload inventory from interface
 			initInventory();
-
-			// Show "open all storage units" button
+			!storeButton.isConnected && unsafeWindow.document.getElementsByClassName("inventory_rightnav")[0].prepend(storeButton);
 			!allCratesButton.isConnected && unsafeWindow.document.getElementsByClassName("inventory_rightnav")[0].prepend(allCratesButton);
 		} else {
+			storeButton.isConnected && storeButton.remove();
 			allCratesButton.isConnected && allCratesButton.remove();
 		}
 	}

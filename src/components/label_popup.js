@@ -45,7 +45,7 @@ export default class LabelPopup {
 
 				if (!Script.Bot?.Plugin?.Connected) {
 					Script.ShowStartInterfacePrompt({
-						message: "Interface must running to personalize storage units",
+						message: "Interface must be running to personalize storage units",
 						autoClose: true,
 						popoverMode: true,
 						fade: false,

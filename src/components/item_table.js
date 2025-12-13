@@ -1,10 +1,10 @@
 import Script, { ERROR_LEVEL } from '@core/script.js';
 import * as Constant from '@cs2/constants.js';
-import Inventory from '@cs2/items/inventory.js';
 import Asset from '@cs2/items/assets/asset.js';
 import Popup from '@components/popup.js';
 import Worker from '@utils/worker';
 import { CreateElement, BindTooltip, Sleep, Random } from '@utils/helpers.js';
+import Icons from '@cs2/items/icons';
 
 export default class ItemTable {
 	#mode;
@@ -53,7 +53,7 @@ export default class ItemTable {
 	static SORT_DIRECTION = {
 		ASC: 0,
 		DESC: 1
-	}
+	};
 
 	constructor(data, inventory, options) {
 		this.#data = data;
@@ -404,15 +404,15 @@ export default class ItemTable {
 					children: [
 						CreateElement("span", {
 							children: [
-								this.#selectionLimitCount,
-								" Space(s) Available"
+								this.#clearSelectionButton,
+								this.#selectionCount,
+								" Item(s) Selected",
 							]
 						}),
 						CreateElement("span", {
 							children: [
-								this.#clearSelectionButton,
-								this.#selectionCount,
-								" Item(s) Selected",
+								this.#selectionLimitCount,
+								" Space(s) Available"
 							]
 						}),
 						this.#actionButton
@@ -455,7 +455,7 @@ export default class ItemTable {
 			],
 			body: [this.#tableContainer, footerContainer],
 			onclose: () => {
-				Script.RemovetatusUpdateListener(onStatusUpdate);
+				Script.RemoveStatusUpdateListener(onStatusUpdate);
 
 				if (this.#inventoryChanged) {
 					window.location.reload();
@@ -468,9 +468,10 @@ export default class ItemTable {
 		this.#popup.Show();
 		this.#UpdateTable();
 		this.#tableContainer.focus();
+		// Lock column widths so they don't jump around when filtering
 		this.#tableContainer.style.width = `${this.#tableContainer.offsetWidth}px`;
 		this.#tableContainer.querySelectorAll('thead th').forEach(th => {
-			th.style.width = getComputedStyle(th).width; //`${th.offsetWidth}px`;
+			th.style.width = getComputedStyle(th).width;
 		});
 	}
 
@@ -494,7 +495,7 @@ export default class ItemTable {
 				const keychainSeed = item.attributes[`keychain slot 0 seed`];
 
 				const keychainIMG = CreateElement("img", {
-					src: `https://community.fastly.steamstatic.com/economy/image/${Inventory.iconURLs[keychain.full_name]}/25fx19f`
+					src: Icons.GetIconURL(keychain.full_name, "25fx19f")
 				});
 				if (typeof keychainSeed !== "undefined") {
 					BindTooltip(keychainIMG, `${keychain.full_name} (${keychainSeed})`, { showStyle: false });
@@ -513,7 +514,7 @@ export default class ItemTable {
 					const sticker = item.stickers[stickerID];
 
 					const stickerIMG = CreateElement("img", {
-						src: `https://community.fastly.steamstatic.com/economy/image/${Inventory.iconURLs[sticker.full_name]}/25fx19f`
+						src: Icons.GetIconURL(sticker.full_name, "25fx19f")
 					});
 					BindTooltip(stickerIMG, sticker.full_name, { showStyle: false });
 
@@ -526,7 +527,7 @@ export default class ItemTable {
 			class: "cs2s_table_image_column",
 			children: [
 				CreateElement("img", {
-					src: `https://community.fastly.steamstatic.com/economy/image/${Inventory.iconURLs[item.full_name]}/93fx62f`
+					src: Icons.GetIconURL(item.full_name, "93fx62f")
 				}),
 				cosmetics
 			]
@@ -908,7 +909,6 @@ export default class ItemTable {
 				}
 
 				if (typeof valueA === "string") {
-					// return asc ? valueA.localeCompare(valueB, undefined, { numeric: true }) : valueB.localeCompare(valueA, undefined, { numeric: true });
 					return asc ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
 				}
 
@@ -1014,8 +1014,11 @@ export default class ItemTable {
 				return false;
 			}
 	
-			if (this.#searchQuery && !item.name_normalized.includes(this.#searchQuery)) {
-				return false;
+			if (this.#searchQuery) {
+				const searchWords = this.#searchQuery.split(' ').filter(word => word.length > 0);
+				if (searchWords.length > 0 && !searchWords.every(word => item.name_normalized.includes(word))) {
+					return false;
+				}
 			}
 	
 			return true;

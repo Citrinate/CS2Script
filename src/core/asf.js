@@ -18,22 +18,22 @@ export default {
 				url: `${GetSetting(SETTING_ASF_SERVER)}:${GetSetting(SETTING_ASF_PORT)}/Api/${operation}/${bot}/${path}${parameters}`,
 				method: http_method,
 				data: payload,
-				responseType: "json",
 				headers: {
 					"Accept": "application/json",
 					"Content-Type": "application/json",
 					"Authentication": GetSetting(SETTING_ASF_PASSWORD)
 				},
 				onload: (response) => {
-					if (typeof response.response === "string") {
-						try {
-							response.response = JSON.parse(response.response);
-						} catch {
-							;
-						}
+					let parsedResponse;
+					try {
+						// Wrap large numbers in strings to prevent precision loss (specificly: tournament match ids)
+						parsedResponse = JSON.parse(response.responseText.replace(/:(\s*)(\d{16,})/g, ':"$2"'));
+					} catch {
+						// Not a JSON response
+						parsedResponse = response.response;
 					}
 
-					resolve(response);
+					resolve({ ...response, response: parsedResponse });
 				},
 				onerror: (e) => {
 					const error = new Error(`(${e.status}) Request error from /Api/${operation}/${path}`);

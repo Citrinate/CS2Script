@@ -368,7 +368,7 @@ export default class InventoryAsset extends Asset {
 									return;
 								}
 
-								if (inventory === OPERATION_ERROR.INVENTORY_FAILED_TO_LOAD) {
+								if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
 									Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
 
 									return;
@@ -409,7 +409,7 @@ export default class InventoryAsset extends Asset {
 							onclick: async () => {
 								const inventory = await Script.GetInventory({ showProgress: true });
 
-								if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
+								if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
 									Script.ShowStartInterfacePrompt({
 										message: "Inventory not cached.  Please start the interface"
 									});
@@ -417,7 +417,7 @@ export default class InventoryAsset extends Asset {
 									return;
 								}
 
-								if (inventory === OPERATION_ERROR.INVENTORY_FAILED_TO_LOAD) {
+								if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
 									Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
 
 									return;
@@ -466,7 +466,7 @@ export default class InventoryAsset extends Asset {
 									return;
 								}
 
-								if (inventory === OPERATION_ERROR.INVENTORY_FAILED_TO_LOAD) {
+								if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
 									Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
 
 									return;
@@ -516,7 +516,7 @@ export default class InventoryAsset extends Asset {
 									return;
 								}
 
-								if (inventory === OPERATION_ERROR.INVENTORY_FAILED_TO_LOAD) {
+								if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
 									Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
 
 									return;

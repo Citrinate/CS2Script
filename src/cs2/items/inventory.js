@@ -2,15 +2,13 @@ import Script, { ERROR_LEVEL, OPERATION_ERROR } from '@core/script.js';
 import ASF from '@core/asf.js';
 import { CS2_APPID } from '@cs2/constants.js';
 import Cache from '@utils/cache';
-import { Request, Sleep, Random } from '@utils/helpers.js';
+import { Sleep } from '@utils/helpers.js';
+import Icons from './icons';
 
 export default class Inventory {
 	items;
 	storedItems;
 	loadedFromCache;
-
-	static iconURLsCacheID = "icon_urls";
-	static iconURLs = null;
 
 	constructor(items, loadedFromCache = false) {
 		this.items = items;
@@ -19,13 +17,12 @@ export default class Inventory {
 	}
 
 	async LoadCrateContents(progressCallback) {
-		// Get the contents of all crates in the inventory, along with any necessary data needed to display them in a table
-		Inventory.iconURLs = await Cache.GetValue(Inventory.iconURLsCacheID, {});
-
 		let cratesOpened = 0;
 		const numCrates = this.items.filter(item => item.iteminfo.def_index === 1201).length;
 
 		progressCallback(`Loading Storage Unit Contents (${cratesOpened}/${numCrates})`, cratesOpened / numCrates);
+
+		await Icons.LoadCachedIcons();
 
 		for (const item of this.items) {
 			// Get crate contents
@@ -41,16 +38,14 @@ export default class Inventory {
 			}
 
 			// Cache icons for items already in our inventory
-			if (!Inventory.iconURLs[item.full_name]) {
+			if (!Icons.URLs[item.full_name]) {
 				const asset = unsafeWindow.g_rgAppContextData[CS2_APPID].rgContexts[2].inventory.m_rgAssets[item.iteminfo.id];
 
 				if (asset) {
-					Inventory.iconURLs[item.full_name] = asset.description.icon_url;
+					Icons.SetIcon(item.full_name, asset.description.icon_url);
 				}
 			}
 		}
-
-		Cache.SetValue(Inventory.iconURLsCacheID, Inventory.iconURLs);
 
 		// Build a list of all the items we need to get icons for
 		const itemsToGetIconsFor = new Set();
@@ -85,7 +80,7 @@ export default class Inventory {
 
 			if (item.stickers) {
 				for (const sticker of Object.values(item.stickers)) {
-					if (Inventory.iconURLs[sticker.full_name] || Inventory.iconURLs[sticker.full_name] === null) {
+					if (Icons.URLs[sticker.full_name] || Icons.URLs[sticker.full_name] === null) {
 						continue;
 					}
 
@@ -95,7 +90,7 @@ export default class Inventory {
 
 			if (item.keychains) {
 				for (const keychain of Object.values(item.keychains)) {
-					if (Inventory.iconURLs[keychain.full_name] || Inventory.iconURLs[keychain.full_name] === null) {
+					if (Icons.URLs[keychain.full_name] || Icons.URLs[keychain.full_name] === null) {
 						continue;
 					}
 
@@ -103,7 +98,7 @@ export default class Inventory {
 				}
 			}
 
-			if (!item.moveable || Inventory.iconURLs[item.full_name] || Inventory.iconURLs[item.full_name] === null) {
+			if (!item.moveable || Icons.URLs[item.full_name] || Icons.URLs[item.full_name] === null) {
 				continue;
 			}
 
@@ -115,10 +110,10 @@ export default class Inventory {
 		}
 
 		// Attempt to get commodity icons in batches from the multisell page
-		await this.#FetchCommodityIcons(commodityItemsToGetIconsFor, progressCallback);
+		await Icons.FetchMarketCommodityIcons(commodityItemsToGetIconsFor, progressCallback);
 
 		// Get everything else individually from market listing pages, including failed commodity fetches
-		await this.#FetchIcons(new Set([...itemsToGetIconsFor, ...commodityItemsToGetIconsFor]), progressCallback);
+		await Icons.FetchMarketIcons(new Set([...itemsToGetIconsFor, ...commodityItemsToGetIconsFor]), progressCallback);
 	}
 
 	async #OpenCrate(item) {
@@ -183,180 +178,9 @@ export default class Inventory {
 		}
 
 		const error = new Error(`Failed to open crate ${assetID}`);
-		error.OPERATION_ERROR = OPERATION_ERROR.INVENTORY_FAILED_TO_LOAD;
+		error.OPERATION_ERROR = OPERATION_ERROR.FAILED_TO_LOAD;
 
 		throw error;
-	}
-
-	async #FetchIcons(hashes, progressCallback) {
-		if (hashes.size == 0) {
-			return;
-		}
-
-		const iconsToFetch = hashes.size;
-		let iconsFetched = 0;
-
-		progressCallback("Fetching Item Icons", 0);
-
-		for (const hash of hashes) {
-			let success = false;
-
-			const url = `${window.location.origin}/market/listings/${CS2_APPID}/${encodeURIComponent(hash)}`;
-
-			for (let attempt = 0; attempt < 5; attempt++) {
-				try {
-					const listingPage = await Request(url);
-
-					if (listingPage.includes("g_rgAssets = []")) {
-						// Error page
-						if (!listingPage.includes("Market_LoadOrderSpread")) {
-							// Item does not exist: "There are no listings for this item." error page
-							success = true;
-							Inventory.iconURLs[hash] = null;
-							hashes.delete(hash);
-							Cache.SetValue(Inventory.iconURLsCacheID, Inventory.iconURLs);
-
-							continue;
-						}
-						
-						await Sleep(Random(1000, 2000));
-						continue;
-					}
-
-					const matches = listingPage.match(/g_rgAssets\s*=\s*({.*?});/);
-
-					if (!matches) {
-						Script.ShowError({ level: ERROR_LEVEL.LOW }, new Error(`Failed to find g_rgAssets at ${url}`));
-						console.log(listingPage);
-
-						return;
-					}
-
-					if (matches.length > 1) {
-						let assets;
-						try {
-							assets = JSON.parse(matches[1]);
-						} catch {
-							Script.ShowError({ level: ERROR_LEVEL.LOW }, new Error(`Failed to parse g_rgAssets at ${url}`));
-							console.log(matches);
-
-							return;
-						}
-
-						const asset = Object.values(assets?.[CS2_APPID]?.[2] ?? assets?.[CS2_APPID]?.[0] ?? {})?.[0];
-
-						if (asset?.icon_url) {
-							success = true;
-							Inventory.iconURLs[hash] = asset?.icon_url;
-							hashes.delete(hash);
-							Cache.SetValue(Inventory.iconURLsCacheID, Inventory.iconURLs);
-						}
-					}
-
-					break;
-				} catch (e) {
-					Script.ShowError({ level: ERROR_LEVEL.LOW }, e);
-					await Sleep(Random(1000, 2000));
-				}
-			}
-
-			if (!success) {
-				Script.ShowError({ level: ERROR_LEVEL.LOW }, new Error(`Failed to get item icon at ${url}`));
-			}
-
-			iconsFetched++;
-			progressCallback(`Fetching Item Icons (${iconsFetched}/${iconsToFetch})`, iconsFetched / iconsToFetch);
-		}
-	}
-
-	async #FetchCommodityIcons(hashes, progressCallback) {
-		if (hashes.size == 0) {
-			return;
-		}
-
-		const itemLimit = 25; // Can go up to 100, but the higher this number is the more often the page will return an error
-
-		const chunkedHashes = Array.from(
-			{ length: Math.ceil(hashes.size / itemLimit) },
-			(_, index) => [...hashes].slice(index * itemLimit, (index + 1) * itemLimit)
-		);
-
-		const iconsToFetch = hashes.size;
-		let iconsFetched = 0;
-
-		progressCallback("Fetching Commodity Item Icons", 0);
-
-		for (const chunk of chunkedHashes) {
-			const query = new URLSearchParams({
-				appid: String(CS2_APPID),
-				contextid: "2"
-			});
-
-			for (const hash of chunk) {
-				query.append("items[]", hash);
-			}
-
-			const url = `${window.location.origin}/market/multisell?${query.toString()}`;
-
-			let success = false;
-
-			// This page returns errors very frequently
-			for (let attempt = 0; attempt < 5; attempt++) {
-				try {
-					const multiSellPage = await Request(url);
-
-					if (multiSellPage.includes("error_ctn")) {
-						continue;
-					}
-
-					const matches = multiSellPage.match(/g_rgAssets\s*=\s*({.*?});/)
-
-					if (!matches) {
-						Script.ShowError({ level: ERROR_LEVEL.LOW }, new Error(`Failed to find g_rgAssets at ${url}`));
-						console.log(multiSellPage);
-
-						return;
-					}
-
-					if (matches.length > 1) {
-						let assets;
-						try {
-							assets = JSON.parse(matches[1]);
-						} catch (e) {
-							Script.ShowError({ level: ERROR_LEVEL.LOW }, e, new Error(`Failed to parse g_rgAssets at ${url}`));
-							console.log(matches);
-
-							return;
-						}
-
-						for (const asset of Object.values(assets?.[CS2_APPID]?.[2])) {
-							for (const hash of chunk) {
-								if (asset?.description?.market_hash_name == hash && asset?.description?.icon_url) {
-									Inventory.iconURLs[hash] = asset.description.icon_url;
-									hashes.delete(hash);
-									break;
-								}
-							}
-						}
-
-						success = true;
-						Cache.SetValue(Inventory.iconURLsCacheID, Inventory.iconURLs);
-					}
-
-					break;
-				} catch (e) {
-					Script.ShowError({ level: ERROR_LEVEL.LOW }, e);
-					await Sleep(Random(1000, 2000));
-				}
-			}
-
-			if (!success) {
-				Script.ShowError({ level: ERROR_LEVEL.LOW }, new Error(`Failed to get item icons at ${url}`));
-			}
-
-			iconsFetched += chunk.length;
-			progressCallback(`Fetching Commodity Item Icons (${iconsFetched}/${iconsToFetch})`, iconsFetched / iconsToFetch);
-		}
 	}
 
 	async StoreItem(asset, crateAsset) {
