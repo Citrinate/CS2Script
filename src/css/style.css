@@ -711,12 +711,12 @@
 		width: 475px;
 	}
 
-	.cs2s_table_store_type_stage_column {
-		width: 325px;
+	.cs2s_table_store_type_match_column {
+		width: 450px;
 	}
 
-	.cs2s_table_store_price_team_column {
-		width: 375px;
+	.cs2s_table_store_price_column {
+		width: 200px;
 
 		.cs2s_table_store_discount {
 			margin-right: 4px;
@@ -1080,7 +1080,7 @@
 			padding-left: 22px;
 			font-family: inherit;
 			width: 100px;
-			min-width: 100px;
+			min-width: 120px;
 
 			&::-webkit-search-cancel-button {
 				-webkit-appearance: none;

@@ -94,7 +94,7 @@ export default class StoreTable extends Table {
 										})
 									],
 									onclick: (event) => {
-										this._SortRows({ event: event, columns: ["name", "supplemental_data"] });
+										this._SortRows({ event: event, columns: ["name", "default_sort_order"] });
 									}
 								}),
 								CreateElement("span", {
@@ -119,7 +119,7 @@ export default class StoreTable extends Table {
 							]
 						}),
 						CreateElement("th", {
-							class: "cs2s_table_store_type_stage_column",
+							class: "cs2s_table_store_type_match_column",
 							children: [
 								CreateElement("span", {
 									class: "cs2s_table_column",
@@ -131,41 +131,7 @@ export default class StoreTable extends Table {
 										})
 									],
 									onclick: (event) => {
-										this._SortRows({ event: event, columns: ["type", "name"]});
-									}
-								}),
-								CreateElement("span", {
-									class: "cs2s_table_column",
-									id: "stage_column",
-									text: "Stage",
-									style: {
-										"display": "none"
-									},
-									children: [
-										CreateElement("div", {
-											class: "cs2s_table_column_sort",
-										})
-									],
-									onclick: (event) => {
-										this._SortRows({ event: event, columns: ["supplemental_data"]});
-									}
-								})
-							]
-						}),
-						CreateElement("th", {
-							class: "cs2s_table_store_price_team_column",
-							children: [
-								CreateElement("span", {
-									class: "cs2s_table_column",
-									id: "price_column",
-									text: "Price",
-									children: [
-										CreateElement("div", {
-											class: "cs2s_table_column_sort",
-										})
-									],
-									onclick: (event) => {
-										this._SortRows({ event: event, columns: ["price", "name"]});
+										this._SortRows({ event: event, columns: ["type", "name", "default_sort_order"]});
 									}
 								}),
 								CreateElement("span", {
@@ -181,7 +147,7 @@ export default class StoreTable extends Table {
 										})
 									],
 									onclick: (event) => {
-										this._SortRows({ event: event, columns: ["team_1", "team_2", "supplemental_data"]});
+										this._SortRows({ event: event, columns: ["supplemental_data"]});
 									}
 								}),
 								CreateElement("span", {
@@ -193,7 +159,7 @@ export default class StoreTable extends Table {
 									children: [
 										CreateElement("input", {
 											type: "search",
-											placeholder: "Search",
+											placeholder: "Team Search",
 											oninput: (event) => {
 												// auto resize input box to input size
 												event.target.style.width = "0px";
@@ -206,6 +172,23 @@ export default class StoreTable extends Table {
 											}
 										})
 									]
+								})
+							]
+						}),
+						CreateElement("th", {
+							class: "cs2s_table_store_price_column",
+							children: [
+								CreateElement("span", {
+									class: "cs2s_table_column",
+									text: "Price",
+									children: [
+										CreateElement("div", {
+											class: "cs2s_table_column_sort",
+										})
+									],
+									onclick: (event) => {
+										this._SortRows({ event: event, columns: ["price", "default_sort_order"]});
+									}
 								})
 							]
 						})
@@ -328,40 +311,34 @@ export default class StoreTable extends Table {
 				}),
 				(!item.requires_supplemental_data 
 					? CreateElement("td", {
-						class: "cs2s_table_store_type_stage_column",
+						class: "cs2s_table_store_type_match_column",
 						text: item.type
 					})
 					: CreateElement("td", {
-						class: "cs2s_table_store_type_stage_column",
-						text: item.section_name
+						class: "cs2s_table_store_type_match_column",
+						html: `${item.section_name} &mdash; ${item.team_1} (${item.team_1_score}) &mdash; ${item.team_2} (${item.team_2_score})`
 					})
 				),
-				(!item.requires_supplemental_data 
-					? CreateElement("td", {
-						class: "cs2s_table_store_price_team_column",
-						children: [
-							item.discount && CreateElement("span", {
-								class: "cs2s_table_store_discount",
-								children: [
-									CreateElement("span", {
-										class: "cs2s_table_store_discount_percentage",
-										text: `-${item.discount}%`
-									}),
-									CreateElement("span", {
-										class: "cs2s_table_store_discount_original_price",
-										text: this.#store.FormatCurrency(item.original_price)
-									})
-								]
-								
-							}),
-							this.#store.FormatCurrency(item.price)
-						]
-					})
-					: CreateElement("td", {
-						class: "cs2s_table_store_price_team_column",
-						html: `${item.team_1} (${item.team_1_score}) &mdash; ${item.team_2} (${item.team_2_score})`
-					})
-				)
+				CreateElement("td", {
+					class: "cs2s_table_store_price_column",
+					children: [
+						item.discount && CreateElement("span", {
+							class: "cs2s_table_store_discount",
+							children: [
+								CreateElement("span", {
+									class: "cs2s_table_store_discount_percentage",
+									text: `-${item.discount}%`
+								}),
+								CreateElement("span", {
+									class: "cs2s_table_store_discount_original_price",
+									text: this.#store.FormatCurrency(item.original_price)
+								})
+							]
+							
+						}),
+						this.#store.FormatCurrency(item.price)
+					]
+				})
 			]
 		});
 
@@ -448,17 +425,13 @@ export default class StoreTable extends Table {
 
 		// Souvenir tab has unique columns
 		if (newTab === StoreTable.TAB.TOURNAMENT_SOUVENIRS) {
-			this._tableContainerElement.querySelector("#stage_column").style.display = "";
 			this._tableContainerElement.querySelector("#teams_column").style.display = "";
 			this._tableContainerElement.querySelector("#teams_search").style.display = "";
 			this._tableContainerElement.querySelector("#type_column").style.display = "none";
-			this._tableContainerElement.querySelector("#price_column").style.display = "none";
 		} else {
-			this._tableContainerElement.querySelector("#stage_column").style.display = "none";
 			this._tableContainerElement.querySelector("#teams_column").style.display = "none";
 			this._tableContainerElement.querySelector("#teams_search").style.display = "none";
 			this._tableContainerElement.querySelector("#type_column").style.display = "";
-			this._tableContainerElement.querySelector("#price_column").style.display = "";
 		}
 
 		// Reset all sorting
