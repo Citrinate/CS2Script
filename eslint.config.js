@@ -19,7 +19,13 @@ export default defineConfig([
 			}
 		},
 		rules: {
-			"no-unreachable": "warn"
+			"no-unreachable": "warn",
+			"no-unused-vars": [
+				"error", {
+					argsIgnorePattern: "^_",
+					varsIgnorePattern: "^_"
+				}
+			]
 		},
 	}
 ]);

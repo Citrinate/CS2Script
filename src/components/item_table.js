@@ -5,45 +5,35 @@ import Popup from '@components/popup.js';
 import Worker from '@utils/worker';
 import { CreateElement, BindTooltip, Sleep, Random } from '@utils/helpers.js';
 import Icons from '@cs2/items/icons';
+import Table from './table';
 
-export default class ItemTable {
+export default class ItemTable extends Table {
+	#inventory;
+
 	#mode;
 	#casket;
 	#multiCasket;
-
-	#data;
-	#filteredData;
-	#inventory;
 	#selectionLimit;
-	#rowElements = [];
+	
 	#selectedRows = new Set();
 	#selectedRowsSaved = new Set();
-	#lastStartRow;
 	#lastRowClicked = null;
 	#lastRowSelected = null;
 	#inventoryChanged = false;
-	#sortColumns = null;
-	#sortDirection = null;
+
 	#filterables = null;
 	#filter = null;
 	#searchQuery = null;
+	#defaultSort = {
+		columns: ["casket_id", "id"],
+		direction: Table.SORT_DIRECTION.DESC
+	};
 
-	static ROW_HEIGHT = 69;
-	static BUFFER_ROWS = 3;
-	#VISIBLE_ROWS;
-	get #NUM_ROW_ELEMENTS() { return this.#VISIBLE_ROWS + ItemTable.BUFFER_ROWS * 2; };
-
-	#popup;
-
-	#tableContainer;
-	#table;
-	#tableBody;
-	#spacer;
-	#selectionLimitCount
-	#selectionCount;
-	#clearSelectionButton;
-	#filterCount;
-	#actionButton;
+	#selectionLimitCountElement
+	#selectionCountElement;
+	#clearSelectionButtonElement;
+	#filterCountElement;
+	#actionButtonElement;
 
 	static MODE = {
 		STORE: 0,
@@ -55,170 +45,154 @@ export default class ItemTable {
 		DESC: 1
 	};
 
-	constructor(data, inventory, options) {
-		this.#data = data;
-		this.#filteredData = data;
+	constructor(items, inventory, options) {
+		super();
+
 		this.#inventory = inventory;
 		this.#mode = options.mode;
 		this.#casket = options.casket ?? null;
 		this.#multiCasket = options.multiCasket ?? false;
 
-		this.#VISIBLE_ROWS = Math.max(1, Math.floor((unsafeWindow.innerHeight * .66) / ItemTable.ROW_HEIGHT));
-
-		this.#data.map(item => delete item.element);
-
-		// Build Table Elements
-
-		this.#tableBody = CreateElement("tbody");
-
-		this.#spacer = CreateElement("div");
-
-		this.#table = CreateElement("table", {
-			class: "cs2s_table",
+		// Build Table Header
+		const tableHeaderElement = CreateElement("thead", {
 			children: [
-				CreateElement("thead", {
+				CreateElement("tr", {
 					children: [
-						CreateElement("tr", {
+						CreateElement("th", {
+							class: "cs2s_table_image_column"
+						}),
+						CreateElement("th", {
+							class: "cs2s_table_name_column",
 							children: [
-								CreateElement("th", {
-									class: "cs2s_table_image_column"
-								}),
-								CreateElement("th", {
-									class: "cs2s_table_name_column",
+								CreateElement("span", {
+									class: "cs2s_table_column",
+									text: "Name",
 									children: [
-										CreateElement("span", {
-											class: "cs2s_table_column",
-											text: "Name",
-											children: [
-												CreateElement("div", {
-													class: "cs2s_table_column_sort",
-												})
-											],
-											onclick: (event) => {
-												this.#SortRows({ event: event, columns: ["name", "wear"] });
-											}
-										}),
-										CreateElement("span", {
-											class: "cs2s_table_column_search cs2s_resizable_input",
-											children: [
-												CreateElement("input", {
-													type: "search",
-													placeholder: "Search",
-													oninput: (event) => {
-														// auto resize input box to input size
-														event.target.style.width = "0px";
-														event.target.parentNode.dataset.value = event.target.value || event.target.placeholder;
-														event.target.style.width = `${event.target.parentNode.clientWidth}px`;
+										CreateElement("div", {
+											class: "cs2s_table_column_sort",
+										})
+									],
+									onclick: (event) => {
+										this._SortRows({ event: event, columns: ["name", "wear"] });
+									}
+								}),
+								CreateElement("span", {
+									class: "cs2s_table_column_search cs2s_resizable_input",
+									children: [
+										CreateElement("input", {
+											type: "search",
+											placeholder: "Search",
+											oninput: (event) => {
+												// auto resize input box to input size
+												event.target.style.width = "0px";
+												event.target.parentNode.dataset.value = event.target.value || event.target.placeholder;
+												event.target.style.width = `${event.target.parentNode.clientWidth}px`;
 
-														this.#searchQuery = event.currentTarget.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+												this.#searchQuery = event.currentTarget.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-														this.#FilterRows(false);
-													}
-												})
-											]
-										})
-									]
-								}),
-								CreateElement("th", {
-									class: "cs2s_table_collection_column",
-									children: [
-										CreateElement("span", {
-											class: "cs2s_table_column",
-											text: "Quality",
-											children: [
-												CreateElement("div", {
-													class: "cs2s_table_column_sort",
-												})
-											],
-											onclick: (event) => {
-												this.#SortRows({ event: event, columns: ["rarity", "quality", "collection", "name", "wear"] });
-											}
-										}),
-										CreateElement("span", {
-											class: "cs2s_table_column",
-											text: "Collection",
-											children: [
-												CreateElement("div", {
-													class: "cs2s_table_column_sort",
-												})
-											],
-											onclick: (event) => {
-												this.#SortRows({ event: event, columns: ["collection", "rarity", "quality", "name", "wear"] });
+												this._FilterRows();
 											}
 										})
 									]
-								}),
-								CreateElement("th", {
-									class: "cs2s_table_float_column",
-									children: [
-										CreateElement("span", {
-											class: "cs2s_table_column",
-											text: "Float",
-											children: [
-												CreateElement("div", {
-													class: "cs2s_table_column_sort",
-												})
-											],
-											onclick: (event) => {
-												this.#SortRows({ event: event, columns: ["wear"] });
-											}
-										})
-									]
-								}),
-								CreateElement("th", {
-									class: "cs2s_table_seed_column",
-									children: [
-										CreateElement("span", {
-											class: "cs2s_table_column",
-											text: "Seed",
-											children: [
-												CreateElement("div", {
-													class: "cs2s_table_column_sort",
-												})
-											],
-											onclick: (event) => {
-												this.#SortRows({ event: event, columns: ["seed"] });
-											}
-										})
-									]
-								}),
-								this.#multiCasket && CreateElement("th", {
-									class: "cs2s_table_crate_column",
-									children: [
-										CreateElement("span", {
-											class: "cs2s_table_column",
-											text: "Storage Unit",
-											children: [
-												CreateElement("div", {
-													class: "cs2s_table_column_sort",
-												})
-											],
-											onclick: (event) => {
-												this.#SortRows({ event: event, columns: ["casket_name", "id"] });
-											}
-										})
-									]
-								}),
+								})
 							]
-						})
+						}),
+						CreateElement("th", {
+							class: "cs2s_table_collection_column",
+							children: [
+								CreateElement("span", {
+									class: "cs2s_table_column",
+									text: "Quality",
+									children: [
+										CreateElement("div", {
+											class: "cs2s_table_column_sort",
+										})
+									],
+									onclick: (event) => {
+										this._SortRows({ event: event, columns: ["rarity", "quality", "collection", "name", "wear"] });
+									}
+								}),
+								CreateElement("span", {
+									class: "cs2s_table_column",
+									text: "Collection",
+									children: [
+										CreateElement("div", {
+											class: "cs2s_table_column_sort",
+										})
+									],
+									onclick: (event) => {
+										this._SortRows({ event: event, columns: ["collection", "rarity", "quality", "name", "wear"] });
+									}
+								})
+							]
+						}),
+						CreateElement("th", {
+							class: "cs2s_table_float_column",
+							children: [
+								CreateElement("span", {
+									class: "cs2s_table_column",
+									text: "Float",
+									children: [
+										CreateElement("div", {
+											class: "cs2s_table_column_sort",
+										})
+									],
+									onclick: (event) => {
+										this._SortRows({ event: event, columns: ["wear"] });
+									}
+								})
+							]
+						}),
+						CreateElement("th", {
+							class: "cs2s_table_seed_column",
+							children: [
+								CreateElement("span", {
+									class: "cs2s_table_column",
+									text: "Seed",
+									children: [
+										CreateElement("div", {
+											class: "cs2s_table_column_sort",
+										})
+									],
+									onclick: (event) => {
+										this._SortRows({ event: event, columns: ["seed"] });
+									}
+								})
+							]
+						}),
+						this.#multiCasket && CreateElement("th", {
+							class: "cs2s_table_crate_column",
+							children: [
+								CreateElement("span", {
+									class: "cs2s_table_column",
+									text: "Storage Unit",
+									children: [
+										CreateElement("div", {
+											class: "cs2s_table_column_sort",
+										})
+									],
+									onclick: (event) => {
+										this._SortRows({ event: event, columns: ["casket_name", "id"] });
+									}
+								})
+							]
+						}),
 					]
-				}),
-				this.#tableBody,
-				this.#spacer
+				})
 			]
 		});
 
-		this.#tableContainer = CreateElement("div", {
-			class: "cs2s_table_container",
-			style: {
-				height: `${(this.#VISIBLE_ROWS + 1) * ItemTable.ROW_HEIGHT}px`
-			},
-			onscroll: () => { this.#UpdateRows(); },
-			children: [this.#table]
+		const emptyTableRowElement = CreateElement("tr", {
+			children: [
+				CreateElement("td", {
+					class: "cs2s_table_empty",
+					colspan: 6,
+					text: this.#mode == ItemTable.MODE.RETRIEVE ? "Storage Unit is empty" : "Inventory has no storable items"
+				})
+			]
 		});
 
 		// Build Footer Elements
-
 		if (this.#mode === ItemTable.MODE.RETRIEVE) {
 			this.#selectionLimit = Constant.INVENTORY_ITEM_LIMIT - inventory.items.filter(x => typeof x.attributes["trade protected escrow date"] === "undefined").length;
 		} else {
@@ -231,30 +205,26 @@ export default class ItemTable {
 			}
 
 			this.#selectionLimit = Constant.INVENTORY_ITEM_LIMIT - status.Plugin.UnprotectedInventorySize;
-			this.#UpdateFooter();
+			this._UpdateFooter();
 		};
 
-		this.#filterCount = CreateElement("span", {
+		this.#filterCountElement = CreateElement("span", {
 			class: "cs2s_table_footer_selection_count",
-			text: this.#data.length.toLocaleString()
 		});
 
-		this.#selectionLimitCount = CreateElement("span", {
+		this.#selectionLimitCountElement = CreateElement("span", {
 			class: "cs2s_table_footer_selection_count",
-			text: this.#selectionLimit.toLocaleString()
 		});
 
-		this.#selectionCount = CreateElement("span", {
+		this.#selectionCountElement = CreateElement("span", {
 			class: "cs2s_table_footer_selection_count",
-			text: 0
 		});
 
-		this.#clearSelectionButton = CreateElement("a", {
+		this.#clearSelectionButtonElement = CreateElement("a", {
 			class: "cs2s_table_footer_action_link",
-			// text: "Clear",
 			onclick: () => {
 				this.#DeselectAll();
-				this.#tableContainer.focus();
+				this._tableContainerElement.focus();
 			},
 			children: [
 				CreateElement("span", {
@@ -270,11 +240,11 @@ export default class ItemTable {
 			]
 		});
 
-		this.#actionButton = CreateElement("a", {
+		this.#actionButtonElement = CreateElement("a", {
 			class: "cs2s_green_button cs2s_button_disabled",
 			html: "<span>Proceed...</span>",
 			onclick: () => {
-				if (this.#actionButton.classList.contains("cs2s_button_disabled")) {
+				if (this.#actionButtonElement.classList.contains("cs2s_button_disabled")) {
 					return;
 				}
 
@@ -287,7 +257,7 @@ export default class ItemTable {
 						popoverMode: true,
 						fade: false,
 						onclose: () => {
-							this.#tableContainer.focus();
+							this._tableContainerElement.focus();
 						},
 						onconnected: () => {
 							this.#inventoryChanged = true; // force page reload
@@ -302,7 +272,7 @@ export default class ItemTable {
 			}
 		});
 
-		const footerContainer = CreateElement("div", {
+		const tableFooterElement = CreateElement("div", {
 			class: "cs2s_table_footer cs2s_popup_footer",
 			children: [
 				CreateElement("div", {
@@ -328,7 +298,7 @@ export default class ItemTable {
 										})
 									]
 								}),
-								this.#filterCount,
+								this.#filterCountElement,
 								" Item(s)"
 							]
 						}),
@@ -396,7 +366,6 @@ export default class ItemTable {
 								})
 							]
 						})
-
 					]
 				}),
 				CreateElement("div", {
@@ -404,25 +373,24 @@ export default class ItemTable {
 					children: [
 						CreateElement("span", {
 							children: [
-								this.#clearSelectionButton,
-								this.#selectionCount,
+								this.#clearSelectionButtonElement,
+								this.#selectionCountElement,
 								" Item(s) Selected",
 							]
 						}),
 						CreateElement("span", {
 							children: [
-								this.#selectionLimitCount,
+								this.#selectionLimitCountElement,
 								" Space(s) Available"
 							]
 						}),
-						this.#actionButton
+						this.#actionButtonElement
 					]
 				})
 			]
 		});
 
 		// Build Popup Elements
-
 		const popupTitle = this.#mode === ItemTable.MODE.RETRIEVE
 			? "Select items to retrieve from "
 			: "Select items to move into ";
@@ -433,7 +401,7 @@ export default class ItemTable {
 
 		BindTooltip(cachedNotification, "The information below was loaded from cache and may no longer be accurate.");
 
-		const popupTitleCrateName = CreateElement("span", {
+		const popupTitleCrateNameElement = CreateElement("span", {
 			class: "cs2s_table_title_casket",
 			text: this.#multiCasket ? options.casketName : `"${options.casketName}"`,
 			children: [
@@ -443,39 +411,31 @@ export default class ItemTable {
 		});
 
 		if (this.#multiCasket) {
-			popupTitleCrateName.classList.add("cs2s_table_title_casket_multiple");
+			popupTitleCrateNameElement.classList.add("cs2s_table_title_casket_multiple");
 		}
 
 		Script.AddStatusUpdateListener(onStatusUpdate);
 
-		this.#popup = new Popup({
-			title: popupTitle,
-			titleChildren: [
-				popupTitleCrateName
-			],
-			body: [this.#tableContainer, footerContainer],
-			onclose: () => {
-				Script.RemoveStatusUpdateListener(onStatusUpdate);
+		// Build Table
+		this._CreateTable(items, tableHeaderElement, tableFooterElement, {
+				defaultSort: this.#defaultSort,
+				emptyTableRowElement: emptyTableRowElement,
+				popupTitle: popupTitle,
+				popupTitleChildren: [
+					popupTitleCrateNameElement
+				],
+				popupOnClose: () => {
+					Script.RemoveStatusUpdateListener(onStatusUpdate);
 
-				if (this.#inventoryChanged) {
-					window.location.reload();
+					if (this.#inventoryChanged) {
+						window.location.reload();
+					}
 				}
 			}
-		});
+		);
 	}
 
-	Show() {
-		this.#popup.Show();
-		this.#UpdateTable();
-		this.#tableContainer.focus();
-		// Lock column widths so they don't jump around when filtering
-		this.#tableContainer.style.width = `${this.#tableContainer.offsetWidth}px`;
-		this.#tableContainer.querySelectorAll('thead th').forEach(th => {
-			th.style.width = getComputedStyle(th).width;
-		});
-	}
-
-	#GetRowElement(item, buildIfDoesntExist = true) {
+	_GetRowElement(item, buildIfDoesntExist = true) {
 		if (item.element) {
 			return item.element;
 		}
@@ -534,7 +494,6 @@ export default class ItemTable {
 		});
 
 		// Build Name Element
-
 		const nameTD = CreateElement("td", {
 			class: "cs2s_table_name_column",
 			text: item.name,
@@ -554,7 +513,6 @@ export default class ItemTable {
 		});
 
 		// Build Rarity / Collection Element
-
 		const collectionTD = CreateElement("td", {
 			class: "cs2s_table_collection_column",
 		});
@@ -574,7 +532,6 @@ export default class ItemTable {
 		}
 
 		// Build Float Element
-
 		const floatTD = CreateElement("td", {
 			class: "cs2s_table_float_column",
 		});
@@ -589,21 +546,18 @@ export default class ItemTable {
 		}
 
 		// Build Seed Element
-
 		const seedTD = CreateElement("td", {
 			class: "cs2s_table_seed_column",
 			text: item.seed ?? ""
 		});
 
 		// Build Crate Element
-
 		const casketTD = this.#multiCasket && CreateElement("td", {
 			class: "cs2s_table_crate_column",
 			text: item.casket_name
 		});
 
 		// Build Row Element
-
 		item.element = CreateElement("tr", {
 			onmousedown: (event) => {
 				if (event.target.nodeName === "A" || event.target.parentElement.nodeName === "A" // Ignore clicks on the market page link
@@ -631,138 +585,35 @@ export default class ItemTable {
 		return item.element;
 	}
 
-	#UpdateTable() {
-		// this.#filteredData = this.#data;
-		this.#lastStartRow = Number.POSITIVE_INFINITY;
-
-		for (let i = 0; i < this.#rowElements.length; i++) {
-			this.#rowElements[i].remove();
-		}
-
-		this.#rowElements = [];
-
-		for (let i = 0; i < this.#NUM_ROW_ELEMENTS; i++) {
-			if (i >= this.#filteredData.length) {
-				break;
-			}
-
-			const rowElement = this.#GetRowElement(this.#filteredData[i]);
-			this.#rowElements.push(rowElement);
-			this.#tableBody.append(rowElement);
-		}
-
-		this.#spacer.style.height = "0px"
-		this.#spacer.style.height = `${(this.#filteredData.length * ItemTable.ROW_HEIGHT) - this.#table.clientHeight + 31}px`;
-
-		this.#UpdateRows();
-		this.#UpdateFooter();
-
-		if (this.#data.length == 0) {
-			this.#tableBody.append(CreateElement("tr", {
-				children: [
-					CreateElement("td", {
-						class: "cs2s_table_empty",
-						colspan: 6,
-						text: this.#mode == ItemTable.MODE.RETRIEVE ? "Storage Unit is empty" : "Inventory has no storable items"
-					})
-				]
-			}));
-		}
-	}
-
-	#UpdateRows() {
-		const startRow = Math.max(
-			0,
-			Math.min(
-				this.#filteredData.length - this.#NUM_ROW_ELEMENTS,
-				Math.floor(this.#tableContainer.scrollTop / ItemTable.ROW_HEIGHT) - ItemTable.BUFFER_ROWS
-			)
-		);
-
-		if (startRow == this.#lastStartRow) {
-			return;
-		}
-
-		const diff = Math.max(
-			-this.#NUM_ROW_ELEMENTS,
-			Math.min(
-				this.#NUM_ROW_ELEMENTS,
-				startRow - this.#lastStartRow
-			)
-		);
-
-		this.#lastStartRow = startRow;
-
-		if (diff > 0) {
-			// Scrolling down
-			for (let i = 0; i < diff; i++) {
-				const dataIndex = startRow + this.#NUM_ROW_ELEMENTS - diff + i;
-
-				if (dataIndex >= this.#filteredData.length || dataIndex < 0) {
-					continue;
-				}
-
-				// Delete a rendered row from the top
-				const oldRow = this.#rowElements.shift();
-				oldRow.remove();
-
-				// Render a new row at the bottom
-				const newRow = this.#GetRowElement(this.#filteredData[dataIndex]);
-				this.#rowElements.push(newRow);
-				this.#tableBody.append(newRow);
-			}
-		} else {
-			// Scrolling up
-			for (let i = 0; i < Math.abs(diff); i++) {
-				const dataIndex = startRow - diff - i - 1;
-
-				if (dataIndex >= this.#filteredData.length || dataIndex < 0) {
-					continue;
-				}
-
-				// Delete a rendered row from the bottom
-				const oldRow = this.#rowElements.pop();
-				oldRow.remove();
-
-				// Render a new row at the top
-				const newRow = this.#GetRowElement(this.#filteredData[dataIndex]);
-				this.#rowElements.unshift(newRow);
-				this.#tableBody.prepend(newRow);
-			}
-		}
-
-		this.#tableBody.style.transform = `translate3d(0, ${startRow * ItemTable.ROW_HEIGHT}px, 0)`;
-	}
-
-	#UpdateFooter() {
-		this.#selectionLimitCount.innerText = this.#selectionLimit.toLocaleString();
-		this.#selectionCount.innerText = this.#selectedRows.size.toLocaleString();
-		this.#filterCount.innerText = this.#filteredData.length.toLocaleString();
+	_UpdateFooter() {
+		this.#selectionLimitCountElement.innerText = this.#selectionLimit.toLocaleString();
+		this.#selectionCountElement.innerText = this.#selectedRows.size.toLocaleString();
+		this.#filterCountElement.innerText = this._filteredData.length.toLocaleString();
 
 		if (this.#selectedRows.size <= 0) {
-			this.#actionButton.classList.add("cs2s_button_disabled");
-			if (!this.#actionButton.tooltip) {
-				this.#actionButton.tooltip = BindTooltip(this.#actionButton, "No items selected");
+			this.#actionButtonElement.classList.add("cs2s_button_disabled");
+			if (!this.#actionButtonElement.tooltip) {
+				this.#actionButtonElement.tooltip = BindTooltip(this.#actionButtonElement, "No items selected");
 			} else {
-				this.#actionButton.tooltip.innerText = "No items selected";
+				this.#actionButtonElement.tooltip.innerText = "No items selected";
 			}
 		} else if (this.#selectedRows.size > this.#selectionLimit) {
-			this.#actionButton.classList.add("cs2s_button_disabled");
-			if (!this.#actionButton.tooltip) {
-				this.#actionButton.tooltip = BindTooltip(this.#actionButton, "Too many items selected");
+			this.#actionButtonElement.classList.add("cs2s_button_disabled");
+			if (!this.#actionButtonElement.tooltip) {
+				this.#actionButtonElement.tooltip = BindTooltip(this.#actionButtonElement, "Too many items selected");
 			} else {
-				this.#actionButton.tooltip.innerText = "Too many items selected";
+				this.#actionButtonElement.tooltip.innerText = "Too many items selected";
 			}
 		} else {
-			this.#actionButton.classList.remove("cs2s_button_disabled");
-			this.#actionButton.unbindTooltip && this.#actionButton.unbindTooltip();
-			this.#actionButton.tooltip = null;
+			this.#actionButtonElement.classList.remove("cs2s_button_disabled");
+			this.#actionButtonElement.unbindTooltip && this.#actionButtonElement.unbindTooltip();
+			this.#actionButtonElement.tooltip = null;
 		}
 
 		if (this.#selectedRows.size > 0) {
-			this.#clearSelectionButton.show();
+			this.#clearSelectionButtonElement.show();
 		} else {
-			this.#clearSelectionButton.hide();
+			this.#clearSelectionButtonElement.hide();
 		}
 	}
 
@@ -773,8 +624,8 @@ export default class ItemTable {
 				return;
 			}
 
-			const start = this.#filteredData.indexOf(this.#lastRowClicked);
-			const end = this.#filteredData.indexOf(item);
+			const start = this._filteredData.indexOf(this.#lastRowClicked);
+			const end = this._filteredData.indexOf(item);
 
 			if (start < 0 || end < 0) {
 				return;
@@ -784,8 +635,8 @@ export default class ItemTable {
 			const to = Math.max(start, end);
 
 			for (let i = from; i <= to; i++) {
-				const rowItem = this.#filteredData[i];
-				const row = this.#GetRowElement(rowItem, false);
+				const rowItem = this._filteredData[i];
+				const row = this._GetRowElement(rowItem, false);
 				const assetID = rowItem.iteminfo.id;
 
 				if (!this.#lastRowSelected && this.#selectedRows.has(assetID)) {
@@ -798,7 +649,7 @@ export default class ItemTable {
 			}
 		} else {
 			// Single select
-			const row = this.#GetRowElement(item);
+			const row = this._GetRowElement(item);
 			const assetID = item.iteminfo.id;
 
 			if (this.#selectedRows.has(assetID)) {
@@ -814,17 +665,17 @@ export default class ItemTable {
 
 		this.#lastRowClicked = item;
 
-		this.#UpdateFooter();
+		this._UpdateFooter();
 	}
 
 	#SelectFirst(count) {
 		for (let i = 0; i < count; i++) {
-			if (i >= this.#filteredData.length) {
+			if (i >= this._filteredData.length) {
 				break;
 			}
 
-			const rowItem = this.#filteredData[i];
-			const row = this.#GetRowElement(rowItem, false);
+			const rowItem = this._filteredData[i];
+			const row = this._GetRowElement(rowItem, false);
 			const assetID = rowItem.iteminfo.id;
 
 			if (!this.#selectedRows.has(assetID)) {
@@ -835,11 +686,11 @@ export default class ItemTable {
 
 		this.#lastRowClicked = null;
 
-		this.#UpdateFooter();
+		this._UpdateFooter();
 	}
 
 	#DeselectAll() {
-		for (const item of this.#data) {
+		for (const item of this._data) {
 			const assetID = item.iteminfo.id;
 
 			if (!this.#selectedRows.has(assetID)) {
@@ -847,98 +698,16 @@ export default class ItemTable {
 			}
 
 			this.#selectedRows.delete(assetID);
-			const row = this.#GetRowElement(item, false);
+			const row = this._GetRowElement(item, false);
 			row && row.classList.remove("cs2s_table_row_selected");
 		}
 
 		this.#lastRowClicked = null;
 
-		this.#UpdateFooter();
+		this._UpdateFooter();
 	}
 
-	#SortRows(options = {}) {
-		if (this.#data.length == 0) {
-			return;
-		}
-
-		if (options.columns) {
-			if (this.#sortDirection != null && this.#sortColumns[0] != options.columns[0]) {
-				this.#sortDirection = null;
-			}
-
-			this.#sortColumns = options.columns;
-		}
-
-		let resetSort = false;
-
-		if (options.event) {
-			if (this.#sortDirection === ItemTable.SORT_DIRECTION.DESC) {
-				this.#sortColumns = ["casket_id", "id"];
-				this.#sortDirection = ItemTable.SORT_DIRECTION.DESC;
-				resetSort = true;
-			} else if (this.#sortDirection === ItemTable.SORT_DIRECTION.ASC) {
-				this.#sortDirection = ItemTable.SORT_DIRECTION.DESC;
-			}
-		}
-
-		if (!this.#sortColumns) {
-			return;
-		}
-
-		if (!this.#sortDirection) {
-			this.#sortDirection = ItemTable.SORT_DIRECTION.ASC;
-		}
-
-		const asc = this.#sortDirection === ItemTable.SORT_DIRECTION.ASC;
-
-		this.#filteredData.sort((a, b) => {
-			for (const column of this.#sortColumns) {
-				let valueA = a[column];
-				let valueB = b[column];
-
-				if (valueA === valueB) {
-					continue;
-				}
-
-				if (typeof valueA === "undefined") {
-					return 1;
-				}
-
-				if (typeof valueB === "undefined") {
-					return -1;
-				}
-
-				if (typeof valueA === "string") {
-					return asc ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
-				}
-
-				return asc ? valueA - valueB : valueB - valueA;
-			}
-
-			return 0;
-		});
-
-		if (options.event) {
-			document.querySelectorAll('.cs2s_table_column_sort_asc').forEach(el => { el.classList.remove('cs2s_table_column_sort_asc'); });
-			document.querySelectorAll('.cs2s_table_column_sort_desc').forEach(el => { el.classList.remove('cs2s_table_column_sort_desc'); });
-
-			if (!resetSort) {
-				if (asc) {
-					options.event.target.querySelector(".cs2s_table_column_sort").classList.add("cs2s_table_column_sort_asc");
-				} else {
-					options.event.target.querySelector(".cs2s_table_column_sort").classList.add("cs2s_table_column_sort_desc");
-				}
-			}
-		}
-
-		this.#UpdateTable();
-	}
-
-	#FilterRows(updateSelected = true) {
-		if (this.#data.length == 0) {
-			return;
-		}
-
+	_FilterRow(item) {
 		const inRange = (value, { min, max }) => {
 			return !(
 				typeof value === "undefined"
@@ -947,96 +716,80 @@ export default class ItemTable {
 			);
 		};
 
-		const matches = item => {
-			if (this.#filter?.selected && !this.#selectedRowsSaved.has(item.iteminfo.id)) {
-				return false;
-			}
-
-			if (this.#filter?.float && !inRange(item.wear, this.#filter.float)) {
-				return false;
-			}
-
-			if (this.#filter?.seed && !inRange(item.seed, this.#filter.seed)) {
-				return false;
-			}
-
-			if (this.#filter?.cosmetics && !inRange(item.cosmetics, this.#filter.cosmetics)) {
-				return false;
-			}
-	
-			if (this.#filter?.quality != null && item.quality !== this.#filter.quality) {
-				return false;
-			}
-	
-			if (this.#filter?.rarity) {
-				switch (this.#filter.rarity.key) {
-					case "weapons":
-						if (typeof item.wear === "undefined" || item.type_name === "Gloves") {
-							return false;
-						}
-						break;
-
-					case "agents":
-						if (item.type_name !== "Agent") {
-							return false;
-						}
-						break;
-
-					case "other":
-						if ((typeof item.wear !== "undefined" && item.type_name !== "Gloves") || item.type_name === "Agent") {
-							return false;
-						}
-						break;
-				}
-
-				if (item.iteminfo.rarity !== this.#filter.rarity.value) {
-					return false;
-				}
-			}
-	
-			if (this.#filter?.type) {
-				switch (this.#filter.type.key) {
-					case "weapons":
-						if (item.weapon_name !== this.#filter.type.value) {
-							return false;
-						}
-						break;
-
-					case "other":
-						if (item.type_name !== this.#filter.type.value) {
-							return false;
-						}
-						break;
-				}
-			}
-	
-			if (this.#filter?.collection && item.collection_name !== this.#filter.collection) {
-				return false;
-			}
-	
-			if (this.#searchQuery) {
-				const searchWords = this.#searchQuery.split(' ').filter(word => word.length > 0);
-				if (searchWords.length > 0 && !searchWords.every(word => item.name_normalized.includes(word))) {
-					return false;
-				}
-			}
-	
-			return true;
-		};
-
-		if (updateSelected) {
-			this.#selectedRowsSaved = new Set(this.#selectedRows);
+		if (this.#filter?.selected && !this.#selectedRowsSaved.has(item.iteminfo.id)) {
+			return false;
 		}
 
-		if (!this.#searchQuery && !this.#filter) {
-			this.#filteredData = this.#data;
-		} else {
-			this.#filteredData = this.#data.filter(matches);
+		if (this.#filter?.float && !inRange(item.wear, this.#filter.float)) {
+			return false;
 		}
 
-		this.#tableContainer.scrollTop = 0;
-		this.#SortRows();
-		this.#UpdateTable();
+		if (this.#filter?.seed && !inRange(item.seed, this.#filter.seed)) {
+			return false;
+		}
+
+		if (this.#filter?.cosmetics && !inRange(item.cosmetics, this.#filter.cosmetics)) {
+			return false;
+		}
+
+		if (this.#filter?.quality != null && item.quality !== this.#filter.quality) {
+			return false;
+		}
+
+		if (this.#filter?.rarity) {
+			switch (this.#filter.rarity.key) {
+				case "weapons":
+					if (typeof item.wear === "undefined" || item.type_name === "Gloves") {
+						return false;
+					}
+					break;
+
+				case "agents":
+					if (item.type_name !== "Agent") {
+						return false;
+					}
+					break;
+
+				case "other":
+					if ((typeof item.wear !== "undefined" && item.type_name !== "Gloves") || item.type_name === "Agent") {
+						return false;
+					}
+					break;
+			}
+
+			if (item.iteminfo.rarity !== this.#filter.rarity.value) {
+				return false;
+			}
+		}
+
+		if (this.#filter?.type) {
+			switch (this.#filter.type.key) {
+				case "weapons":
+					if (item.weapon_name !== this.#filter.type.value) {
+						return false;
+					}
+					break;
+
+				case "other":
+					if (item.type_name !== this.#filter.type.value) {
+						return false;
+					}
+					break;
+			}
+		}
+
+		if (this.#filter?.collection && item.collection_name !== this.#filter.collection) {
+			return false;
+		}
+
+		if (this.#searchQuery) {
+			const searchWords = this.#searchQuery.split(' ').filter(word => word.length > 0);
+			if (searchWords.length > 0 && !searchWords.every(word => item.name_normalized.includes(word))) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	#ShowFilters(button) {
@@ -1078,7 +831,7 @@ export default class ItemTable {
 				}
 			};
 
-			for (const item of this.#data) {
+			for (const item of this._data) {
 				if (item.type_name) {
 					this.#filterables.types.other.add(item.type_name);
 				}
@@ -1705,7 +1458,7 @@ export default class ItemTable {
 			body: [form],
 			popoverMode: true,
 			onclose: () => {
-				this.#tableContainer.focus();
+				this._tableContainerElement.focus();
 			}
 		});
 
@@ -1741,6 +1494,8 @@ export default class ItemTable {
 				selected: selected.checked ? true : null
 			}
 
+			this.#selectedRowsSaved = new Set(this.#selectedRows);
+
 			if (Object.values(this.#filter).every(value => value === null)) {
 				this.#filter = null;
 			}
@@ -1753,7 +1508,7 @@ export default class ItemTable {
 
 			popup.Hide();
 
-			this.#FilterRows();
+			this._FilterRows();
 		};
 
 		popup.Show();
@@ -1810,7 +1565,7 @@ export default class ItemTable {
 			simpleMode: true,
 			popoverMode: true,
 			onclose: () => {
-				this.#tableContainer.focus();
+				this._tableContainerElement.focus();
 
 				worker.Cancel();
 			}
@@ -1824,11 +1579,11 @@ export default class ItemTable {
 
 		for (const assetID of this.#selectedRows) {
 			worker.Add(async () => {
-				const item = this.#data.find(item => item.iteminfo.id == assetID);
+				const item = this._data.find(item => item.iteminfo.id == assetID);
 
 				const itemImage = CreateElement("div", {
 					class: "cs2s_action_item_window_image",
-					html: this.#GetRowElement(item).children[0].innerHTML,
+					html: this._GetRowElement(item).children[0].innerHTML,
 				});
 
 				const maxAttempts = 3;
@@ -1863,15 +1618,15 @@ export default class ItemTable {
 					}
 				}
 
-				const dataIndex = this.#data.findIndex(item => item.iteminfo.id == assetID);
-				this.#data.splice(dataIndex, 1);
-				const filteredDataIndex = this.#filteredData.findIndex(item => item.iteminfo.id == assetID);
-				filteredDataIndex != -1 && this.#filteredData.splice(filteredDataIndex, 1);
+				const dataIndex = this._data.findIndex(item => item.iteminfo.id == assetID);
+				this._data.splice(dataIndex, 1);
+				const filteredDataIndex = this._filteredData.findIndex(item => item.iteminfo.id == assetID);
+				filteredDataIndex != -1 && this._filteredData.splice(filteredDataIndex, 1);
 				this.#selectedRows.delete(assetID);
 				this.#selectionLimit--;
 				this.#inventoryChanged = true;
 
-				this.#UpdateTable();
+				this._UpdateTable();
 
 				numItemsProcessed++;
 				progressMessage.innerText = (this.#mode == ItemTable.MODE.RETRIEVE ? "Retrieving Items" : "Storing Items") + ` (${numItemsProcessed}/${numItemsToProcess})`;
