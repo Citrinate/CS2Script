@@ -134,25 +134,33 @@ export function HandleAddInventoryData() {
 			handler.handledAssetIDs = new Set();
 		}
 
-		if (!unsafeWindow.g_rgAppContextData[CS2_APPID].rgContexts[2].inventory?.m_rgAssets) {
+		const contexts = unsafeWindow.g_rgAppContextData?.[CS2_APPID]?.rgContexts;
+		if (!contexts) {
 			return;
 		}
 
-		for (const element of unsafeWindow.g_rgAppContextData[CS2_APPID].rgContexts[2].inventory.m_rgItemElements) {
-			const asset = element?.[0]?.rgItem;
-			if (!asset) {
+		for (const contextId in contexts) {
+			const inventory = contexts[contextId].inventory;
+			if (!inventory?.m_rgItemElements) {
 				continue;
 			}
 
-			const assetid = asset.assetid;
-			if (handler.handledAssetIDs.has(assetid)) {
-				continue;
-			}
+			for (const element of inventory.m_rgItemElements) {
+				const asset = element?.[0]?.rgItem;
+				if (!asset) {
+					continue;
+				}
 
-			// Add custom elements to the inventory item squares
-			handler.handledAssetIDs.add(assetid);
-			const inventoryAsset = new InventoryAsset(asset);
-			inventoryAsset.BuildInventoryUI();
+				const assetid = asset.assetid;
+				if (handler.handledAssetIDs.has(assetid)) {
+					continue;
+				}
+
+				// Add custom elements to the inventory item squares
+				handler.handledAssetIDs.add(assetid);
+				const inventoryAsset = new InventoryAsset(asset);
+				inventoryAsset.BuildInventoryUI();
+			}
 		}
 	};
 

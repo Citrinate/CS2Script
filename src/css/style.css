@@ -274,6 +274,26 @@
 	&:has(> :nth-child(6)) img:nth-child(n+2) {
 		margin-left: -12px;
 	}
+
+	&.cs2s_asset_trade_protected {
+		left: 28px;
+
+		&:has(> :nth-child(2)):has(> :nth-child(-n+3):last-child) img:nth-child(n+2) {
+			margin-left: -8px;
+		}
+
+		&:has(> :nth-child(4)):has(> :nth-child(-n+5):last-child) img:nth-child(n+2) {
+			margin-left: -12px;
+		}
+
+		&:has(> :nth-child(5)):has(> :nth-child(-n+5):last-child) img:nth-child(n+2) {
+			margin-left: -15px;
+		}
+
+		&:has(> :nth-child(6)) img:nth-child(n+2) {
+			margin-left: -17px;
+		}
+	}
 }
 
 .cs2s_asset_sticker_wear, .cs2s_asset_charm_template {

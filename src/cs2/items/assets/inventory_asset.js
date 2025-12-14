@@ -10,6 +10,7 @@ import { QUALITIES, RARITIES } from "@cs2/constants";
 
 export default class InventoryAsset extends Asset {
 	_asset;
+	#isTradeProtected;
 
 	static #inventoryWorker = new Worker({
 		concurrentLimit: 100
@@ -20,6 +21,7 @@ export default class InventoryAsset extends Asset {
 
 		this._asset = asset;
 		this._assetid = asset.assetid;
+		this.#isTradeProtected = asset.contextid == 16;
 
 		if (asset.description.market_hash_name == "Storage Unit") {
 			this._type = Asset.TYPE.STORAGE_UNIT;
@@ -64,7 +66,7 @@ export default class InventoryAsset extends Asset {
 			if (float || float === 0) {
 				floatElement = CreateElement("div", {
 					class: `cs2s_asset_wear cs2s_asset_wear_${Asset.GetWear(float).name.toLowerCase()}`,
-					text: float.toFixed(11)
+					text: float.toFixed(this.#isTradeProtected ? 7 : 11)
 				});
 
 				this._asset.element.append(floatElement);
@@ -100,13 +102,13 @@ export default class InventoryAsset extends Asset {
 			}
 
 			if (keychainInfo || stickerInfo) {
-				const keychainsElements = [];
+				const keychainElements = [];
 				if (keychainInfo) {
 					const parser = new DOMParser();
 					const doc = parser.parseFromString(keychainInfo, 'text/html');
 
 					for (const img of doc.querySelectorAll('img')) {
-						keychainsElements.push(CreateElement("img", {
+						keychainElements.push(CreateElement("img", {
 							src: img.src
 						}));
 					}
@@ -124,11 +126,11 @@ export default class InventoryAsset extends Asset {
 					}
 				}
 
-				if (keychainsElements.length > 0 || stickerElements.length > 0) {
+				if (keychainElements.length > 0 || stickerElements.length > 0) {
 					this._asset.element.append(
 						CreateElement("div", {
-							class: "cs2s_asset_cosmetics",
-							children: [...keychainsElements, ...stickerElements]
+							class: "cs2s_asset_cosmetics" + (this.#isTradeProtected ? " cs2s_asset_trade_protected" : ""),
+							children: [...keychainElements, ...stickerElements]
 						})
 					);
 				}
@@ -143,7 +145,7 @@ export default class InventoryAsset extends Asset {
 
 					// Update float element with percentile info
 					if (floatElement && this._inspectData.wear && this._wearData) {
-						floatElement.innerText = this._inspectData.wear.toFixed(6);
+						floatElement.innerText = this._inspectData.wear.toFixed(this.#isTradeProtected ? 2 : 6);
 						floatElement.append(" ", this._GetPercentileElement());
 					}
 				}
