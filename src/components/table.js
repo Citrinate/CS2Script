@@ -10,7 +10,6 @@ export default class Table {
 	_sortColumns = null;
 	_sortDirection = null;
 	#defaultSort;
-	#emptyTableRowElement;
 
 	static #ROW_HEIGHT = 69;
 	static #BUFFER_ROWS = 3;
@@ -38,7 +37,6 @@ export default class Table {
 		this._filteredData = tableData;
 
 		this.#defaultSort = options.defaultSort ?? null;
-		this.#emptyTableRowElement = options.emptyTableRowElement ?? null;
 
 		// Reset all row elements created by another table
 		this._data.map(item => delete item.element);
@@ -107,10 +105,6 @@ export default class Table {
 			const rowElement = this._GetRowElement(this._filteredData[i]);
 			this.#rowElements.push(rowElement);
 			this.#tableBodyElement.append(rowElement);
-		}
-
-		if (this._data.length == 0 && this.#emptyTableRowElement) {
-			this.#tableBodyElement.append(this.#emptyTableRowElement);
 		}
 
 		this.#spacerElement.style.height = "0px"

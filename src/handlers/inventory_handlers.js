@@ -47,6 +47,12 @@ export function HandleShowItemInventory() {
 				return;
 			}
 
+			if (inventory.storedItems.length == 0) {
+				Script.ShowMessage({}, "No stored items found");
+
+				return;
+			}
+
 			const table = new ItemTable(inventory.storedItems.slice(), inventory, {
 				mode: ItemTable.MODE.RETRIEVE,
 				casketName: "All Storage Units",
@@ -83,6 +89,12 @@ export function HandleShowItemInventory() {
 			}
 
 			if (!(store instanceof Store)) {
+				return;
+			}
+
+			if (store.items.length == 0) {
+				Script.ShowMessage({}, "No items found in the store");
+
 				return;
 			}
 

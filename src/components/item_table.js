@@ -182,16 +182,6 @@ export default class ItemTable extends Table {
 			]
 		});
 
-		const emptyTableRowElement = CreateElement("tr", {
-			children: [
-				CreateElement("td", {
-					class: "cs2s_table_empty",
-					colspan: 6,
-					text: this.#mode == ItemTable.MODE.RETRIEVE ? "Storage Unit is empty" : "Inventory has no storable items"
-				})
-			]
-		});
-
 		// Build Footer Elements
 		if (this.#mode === ItemTable.MODE.RETRIEVE) {
 			this.#selectionLimit = Constant.INVENTORY_ITEM_LIMIT - inventory.items.filter(x => typeof x.attributes["trade protected escrow date"] === "undefined").length;
@@ -419,7 +409,6 @@ export default class ItemTable extends Table {
 		// Build Table
 		this._CreateTable(items, tableHeaderElement, tableFooterElement, {
 				defaultSort: this.#defaultSort,
-				emptyTableRowElement: emptyTableRowElement,
 				popupTitle: popupTitle,
 				popupTitleChildren: [
 					popupTitleCrateNameElement

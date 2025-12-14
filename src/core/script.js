@@ -275,6 +275,47 @@ class Script {
 		return true;
 	}
 
+	ShowMessage(options, ...messages) {
+		const popup = new Popup({
+			title: options.title ?? "Counter-Strike 2 Script Message",
+			simpleMode: true,
+			popoverMode: true,
+			fade: false,
+			body: [
+				CreateElement("div", {
+					class: "cs2s_action_body",
+					children: [
+						CreateElement("div", {
+							class: "cs2s_action_message_tall cs2s_action_multi_message",
+							children: [
+								...messages.map(message => 
+									CreateElement("div", {
+										class: "cs2s_action_message",
+										text: message
+									})
+								)
+							]
+						}),
+						CreateElement("div", {
+							class: "cs2s_action_buttons",
+							children: [
+								CreateElement("div", {
+									class: "cs2s_grey_long_button",
+									text: "Close",
+									onclick: () => {
+										popup.Hide();
+									}
+								})
+							]
+						})
+					]
+				})
+			]
+		});
+
+		popup.Show();
+	}
+
 	ShowError(options, ...errors) {
 		if (!this.#errorTableBody) {
 			this.#errorTableBody = CreateElement("tbody");
@@ -305,44 +346,7 @@ class Script {
 		}
 
 		if (options.level === ERROR_LEVEL.HIGH) {
-			const popup = new Popup({
-				title: "Counter-Strike 2 Script Error",
-				simpleMode: true,
-				popoverMode: true,
-				fade: false,
-				body: [
-					CreateElement("div", {
-						class: "cs2s_action_body",
-						children: [
-							CreateElement("div", {
-								class: "cs2s_action_message_tall cs2s_action_multi_message",
-								children: [
-									...errors.map(error => 
-										CreateElement("div", {
-											class: "cs2s_action_message",
-											text: error.message
-										})
-									)
-								]
-							}),
-							CreateElement("div", {
-								class: "cs2s_action_buttons",
-								children: [
-									CreateElement("div", {
-										class: "cs2s_grey_long_button",
-										text: "Close",
-										onclick: () => {
-											popup.Hide();
-										}
-									})
-								]
-							})
-						]
-					})
-				]
-			});
-
-			popup.Show();
+			this.ShowMessage({title: "Counter-Strike 2 Script Error"}, ...errors.map(error => error.message));
 		} else if (options.level === ERROR_LEVEL.MEDIUM) {
 			const globalNavigationButton = unsafeWindow.document.getElementById(`account_pulldown`);
 			this.#navigationButton.classList.add("cs2s_navigation_status_error_glow");

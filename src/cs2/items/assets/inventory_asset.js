@@ -394,7 +394,15 @@ export default class InventoryAsset extends Asset {
 									return;
 								}
 
-								const table = new ItemTable(inventory.storedItems.filter(x => x.casket_id == this._assetid), inventory, {
+								const casketItems = inventory.storedItems.filter(x => x.casket_id == this._assetid);
+
+								if (casketItems.length == 0) {
+									Script.ShowMessage({}, "Storage Unit is empty");
+
+									return;
+								}
+
+								const table = new ItemTable(casketItems, inventory, {
 									mode: ItemTable.MODE.RETRIEVE,
 									casket: casket,
 									casketName: casket.attributes["custom name attr"]
@@ -443,7 +451,15 @@ export default class InventoryAsset extends Asset {
 									return;
 								}
 
-								const table = new ItemTable(inventory.items.filter(x => x.moveable), inventory, {
+								const moveableItems = inventory.items.filter(x => x.moveable);
+
+								if (moveableItems.length == 0) {
+									Script.ShowMessage({}, "Inventory has no storable items");
+
+									return;
+								}
+
+								const table = new ItemTable(moveableItems, inventory, {
 									mode: ItemTable.MODE.STORE,
 									casket: casket,
 									casketName: casket.attributes["custom name attr"]
