@@ -39,10 +39,13 @@ export default class Inventory {
 
 			// Cache icons for items already in our inventory
 			if (!Icons.URLs[item.full_name]) {
-				const asset = unsafeWindow.g_rgAppContextData[CS2_APPID].rgContexts[2].inventory.m_rgAssets[item.iteminfo.id];
+				for (const contextId in unsafeWindow.g_rgAppContextData[CS2_APPID].rgContexts) {
+					const asset = unsafeWindow.g_rgAppContextData[CS2_APPID].rgContexts[contextId].inventory.m_rgAssets[item.iteminfo.id];
 
-				if (asset) {
-					Icons.SetIcon(item.full_name, asset.description.icon_url);
+					if (asset) {
+						Icons.SetIcon(item.full_name, asset.description.icon_url);
+						break;
+					}
 				}
 			}
 		}
