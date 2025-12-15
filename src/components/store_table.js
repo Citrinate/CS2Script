@@ -109,7 +109,7 @@ export default class StoreTable extends Table {
 												event.target.parentNode.dataset.value = event.target.value || event.target.placeholder;
 												event.target.style.width = `${event.target.parentNode.clientWidth}px`;
 
-												this.#searchQuery = event.currentTarget.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+												this.#searchQuery = event.currentTarget.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(' ').filter(word => word.length > 0);
 
 												this._FilterRows();
 											}
@@ -166,7 +166,7 @@ export default class StoreTable extends Table {
 												event.target.parentNode.dataset.value = event.target.value || event.target.placeholder;
 												event.target.style.width = `${event.target.parentNode.clientWidth}px`;
 
-												this.#teamsSearchQuery = event.currentTarget.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+												this.#teamsSearchQuery = event.currentTarget.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(' ').filter(word => word.length > 0);
 
 												this._FilterRows();
 											}
@@ -396,17 +396,19 @@ export default class StoreTable extends Table {
 			return false;
 		}
 
-		if (this.#searchQuery) {
-			const searchWords = this.#searchQuery.split(' ').filter(word => word.length > 0);
-			if (searchWords.length > 0 && !searchWords.every(word => item.name_normalized.includes(word))) {
-				return false;
+		if (this.#searchQuery && this.#searchQuery.length > 0) {
+			for (const word of this.#searchQuery) {
+				if (!item.name_normalized.includes(word)) {
+					return false;
+				}
 			}
 		}
 
-		if (this.#teamsSearchQuery && this.#tab === StoreTable.TAB.TOURNAMENT_SOUVENIRS) {
-			const searchWords = this.#teamsSearchQuery.split(' ').filter(word => word.length > 0);
-			if (searchWords.length > 0 && !searchWords.every(word => item.teams_normalized.includes(word))) {
-				return false;
+		if (this.#teamsSearchQuery && this.#teamsSearchQuery.length > 0 && this.#tab === StoreTable.TAB.TOURNAMENT_SOUVENIRS) {
+			for (const word of this.#teamsSearchQuery) {
+				if (!item.teams_normalized.includes(word)) {
+					return false;
+				}
 			}
 		}
 

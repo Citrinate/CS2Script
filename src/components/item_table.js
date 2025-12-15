@@ -88,7 +88,7 @@ export default class ItemTable extends Table {
 												event.target.parentNode.dataset.value = event.target.value || event.target.placeholder;
 												event.target.style.width = `${event.target.parentNode.clientWidth}px`;
 
-												this.#searchQuery = event.currentTarget.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+												this.#searchQuery = event.currentTarget.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(' ').filter(word => word.length > 0);
 
 												this._FilterRows();
 											}
@@ -771,10 +771,11 @@ export default class ItemTable extends Table {
 			return false;
 		}
 
-		if (this.#searchQuery) {
-			const searchWords = this.#searchQuery.split(' ').filter(word => word.length > 0);
-			if (searchWords.length > 0 && !searchWords.every(word => item.name_normalized.includes(word))) {
-				return false;
+		if (this.#searchQuery && this.#searchQuery.length > 0) {
+			for (const word of this.#searchQuery) {
+				if (!item.name_normalized.includes(word)) {
+					return false;
+				}
 			}
 		}
 
