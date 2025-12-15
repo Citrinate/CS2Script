@@ -735,6 +735,14 @@
 		width: 450px;
 	}
 
+	.cs2s_table_store_owned_column {
+		width: 165px;
+
+		.cs2s_has_tooltip {
+			color: #737373;
+		}
+	}
+
 	.cs2s_table_store_price_column {
 		width: 200px;
 
@@ -1073,6 +1081,7 @@
 		font-weight: normal;
 		font-size: 13px;
 		max-width: 275px;
+		height: 20px;
 
 		&::before {
 			content: "";

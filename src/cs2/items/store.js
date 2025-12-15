@@ -5,6 +5,8 @@ import Icons from './icons';
 
 export default class Store {
 	items;
+	inventoryLoaded = false;
+	inventoryLoadedFromCache;
 
 	#storeData;
 	#tournamentData;
@@ -90,8 +92,8 @@ export default class Store {
 					const map_name = Constant.TOURNAMENT_MAPS[match.roundstats_legacy.map_id];
 					const stage_id = match.roundstats_legacy.reservation.tournament_event.event_stage_id;
 					const section = this.#tournamentData.tournamentinfo.sections.find(section => section.groups.find(group => group.stage_ids.includes(stage_id)));
-					const team_1 = match.roundstats_legacy.reservation.tournament_teams[0].team_name;
-					const team_2 = match.roundstats_legacy.reservation.tournament_teams[1].team_name;
+					const team_1 = match.roundstats_legacy.reservation.tournament_teams[0];
+					const team_2 = match.roundstats_legacy.reservation.tournament_teams[1];
 					const is_highlight = section.sectionid >= highlightSectionIDStart;
 					const hash_name = this.#GetHashName(item, map_name, is_highlight);
 					const non_highlight_hash_name = this.#GetHashName(item, map_name); // Highlight packages use the same icons as non-highlight packages
@@ -126,13 +128,16 @@ export default class Store {
 						layout_weight: this.#storeData.price_sheet.store_banner_layout[item.def_index]?.w,
 						tournament_id: item.tournament_id,
 						requires_supplemental_data: item.requires_supplemental_data,
+						stage_id: stage_id,
 						section_id: section.sectionid,
 						section_name: section.name,
-						team_1: team_1,
+						team_1: team_1.team_name,
+						team_1_id: team_1.team_id,
 						team_1_score: match.roundstats_legacy.team_scores[0],
-						team_2: team_2,
+						team_2: team_2.team_name,
+						team_2_id: team_2.team_id,
 						team_2_score: match.roundstats_legacy.team_scores[1],
-						teams_normalized: `${team_1} ${team_2}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(),
+						teams_normalized: `${team_1.team_name} ${team_2.team_name}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(),
 						match_result: match.roundstats_legacy.match_result
 					});
 				}
@@ -145,6 +150,36 @@ export default class Store {
 		[...storeItemsToGetIconsFor].filter(hash => Icons.URLs[hash] !== null).forEach(hash => storeItemsToGetIconsFor.delete(hash));
 		await Icons.FetchMarketCommodityIcons(storeItemsToGetIconsFor, progressCallback);
 		await Icons.FetchMarketIcons(new Set([...storeItemsToGetIconsFor, ...marketItemsToGetIconsFor]), progressCallback);
+	}
+
+	LoadInventory(inventory) {
+		for (const item of this.items) {
+			item.owned = [...inventory.items, ...inventory.storedItems].filter(x => {
+				if (x.iteminfo.def_index == item.id) {
+					return true;
+				}
+
+				// Coupon items
+				if (!item.requires_supplemental_data && item.hash_name && x.full_name == item.hash_name) {
+					return true;
+				}
+
+				// Souvenir packages
+				if (item.requires_supplemental_data
+					&& x.full_name == item.hash_name
+					&& x.attributes["tournament event stage id"] == item.stage_id
+					&& x.attributes["tournament event team0 id"] == item.team_1_id
+					&& x.attributes["tournament event team1 id"] == item.team_2_id
+				) {
+					return true;
+				}
+
+				return false;
+			}).length;
+		}
+
+		this.inventoryLoaded = true;
+		this.inventoryLoadedFromCache = inventory.loadedFromCache;
 	}
 
 	FormatCurrency(valueInCents) {

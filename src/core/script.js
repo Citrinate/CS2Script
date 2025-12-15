@@ -934,12 +934,18 @@ class Script {
 					return OPERATION_ERROR.FAILED_TO_LOAD;
 				}
 
+				const inventory = await this.GetInventory(options);
+
 				try {
 					await store.LoadStoreContents(progressCallback);
 				} catch (e) {
 					this.ShowError({ level: ERROR_LEVEL.MEDIUM }, e);
 
 					return e.OPERATION_ERROR ?? OPERATION_ERROR.FAILED_TO_LOAD;
+				}
+
+				if (inventory instanceof Inventory) {
+					store.LoadInventory(inventory);
 				}
 
 				return store;

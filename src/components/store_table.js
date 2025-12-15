@@ -20,6 +20,7 @@ export default class StoreTable extends Table {
 	};
 
 	#actionButtonElement;
+	#oldNotificationElement;
 
 	static TAB = {
 		GENERAL: 0,
@@ -75,6 +76,21 @@ export default class StoreTable extends Table {
 		}
 
 		// Build Table Header
+		const cachedNotificationElement = CreateElement("span", {
+			text: "(Cached)"
+		});
+
+		BindTooltip(cachedNotificationElement, "The information below was loaded from cache and may no longer be accurate.");
+
+		this.#oldNotificationElement = CreateElement("span", {
+			text: "(Old)",
+			style: {
+				display: "none",
+			}
+		});
+
+		BindTooltip(this.#oldNotificationElement, "The information below may be outdated and will be updated when the page is refreshed.");
+
 		const tableHeaderElement = CreateElement("thead", {
 			children: [
 				CreateElement("tr", {
@@ -173,6 +189,26 @@ export default class StoreTable extends Table {
 										})
 									]
 								})
+							]
+						}),
+						this.#store.inventoryLoaded && CreateElement("th", {
+							class: "cs2s_table_store_owned_column",
+							children: [
+								CreateElement("span", {
+									class: "cs2s_table_column",
+									id: "owned_column",
+									text: "Owned",
+									children: [
+										CreateElement("div", {
+											class: "cs2s_table_column_sort",
+										})
+									],
+									onclick: (event) => {
+										this._SortRows({ event: event, columns: ["owned"]});
+									}
+								}),
+								this.#store.inventoryLoadedFromCache && cachedNotificationElement,
+								this.#oldNotificationElement
 							]
 						}),
 						CreateElement("th", {
@@ -319,6 +355,10 @@ export default class StoreTable extends Table {
 						html: `${item.section_name} &mdash; ${item.team_1} (${item.team_1_score}) &mdash; ${item.team_2} (${item.team_2_score})`
 					})
 				),
+				this.#store.inventoryLoaded && CreateElement("td", {
+					class: "cs2s_table_store_owned_column",
+					text: item.owned
+				}),
 				CreateElement("td", {
 					class: "cs2s_table_store_price_column",
 					children: [
@@ -585,7 +625,14 @@ export default class StoreTable extends Table {
 						}
 
 						newTab.location.href = purchaseUrl;
-						this.#inventoryChanged = true;
+
+						if (!this.#inventoryChanged) {
+							this.#inventoryChanged = true;
+
+							if (this.#store.inventoryLoaded && !this.#store.inventoryLoadedFromCache) {
+								this.#oldNotificationElement.style.display = "";
+							}
+						}
 
 						loadingPopup.Hide();
 					} catch (e) {

@@ -255,9 +255,9 @@ export default class Table {
 
 			if (!resetSort) {
 				if (asc) {
-					options.event.target.querySelector(".cs2s_table_column_sort").classList.add("cs2s_table_column_sort_asc");
+					options.event.currentTarget.querySelector(".cs2s_table_column_sort").classList.add("cs2s_table_column_sort_asc");
 				} else {
-					options.event.target.querySelector(".cs2s_table_column_sort").classList.add("cs2s_table_column_sort_desc");
+					options.event.currentTarget.querySelector(".cs2s_table_column_sort").classList.add("cs2s_table_column_sort_desc");
 				}
 			}
 		}
