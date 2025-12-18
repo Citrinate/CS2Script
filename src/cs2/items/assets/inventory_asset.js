@@ -193,7 +193,7 @@ export default class InventoryAsset extends Asset {
 		}
 		// Storage Units
 		else if (this._type == Asset.TYPE.STORAGE_UNIT) {
-			const itemCount = this.GetDescription("attr: items count", /\d+/)[0]; // Matches digits in: Number of Items: 1000
+			const itemCount = this.GetDescription("attr: items count", /\d+/)?.[0]; // Matches digits in: Number of Items: 1000
 
 			if (itemCount) {
 				this._asset.element.append(
@@ -326,250 +326,253 @@ export default class InventoryAsset extends Asset {
 		}
 		// Storage units
 		else if (this._type == Asset.TYPE.STORAGE_UNIT) {
-			// Wait for inventory to load
-			InventoryAsset.#inventoryWorker.Add(async () => {
-				const inventory = await Script.GetInventory();
-				if (!(inventory instanceof Inventory)) {
-					return;
-				}
+			const isLabeled = !!this.GetDescription("attr: items count");
+			if (isLabeled) {
+				ownerActionsElement.classList.add("cs2s_button_row");
+				ownerActionsElement.append(
+					CreateElement("a", {
+						class: "cs2s_small_grey_button cs2s_element",
+						html: "<span>Retrieve Items</span>",
+						onclick: async () => {
+							const inventory = await Script.GetInventory({ showProgress: true });
 
-				if (selectedItem != unsafeWindow.iActiveSelectView
-					|| this._asset != unsafeWindow.g_ActiveInventory.selectedItem
-				) {
-					return;
-				}
-
-				// Display storage unit name
-				const nameTag = inventory.items.find(x => x.iteminfo.id == this._assetid)?.attributes["custom name attr"];
-				if (nameTag) {
-					descriptionsElement.prepend(
-						CreateElement("div", {
-							class: "cs2s_descriptor_blue cs2s_element",
-							text: `Name Tag: "${nameTag}"`
-						}),
-						CreateElement("div", {
-							class: "cs2s_descriptor cs2s_element",
-							text: "\u00A0"
-						})
-					);
-
-					ownerActionsElement.classList.add("cs2s_button_row");
-					ownerActionsElement.append(
-						CreateElement("a", {
-							class: "cs2s_small_grey_button cs2s_element",
-							html: "<span>Retrieve Items</span>",
-							onclick: async () => {
-								const inventory = await Script.GetInventory({ showProgress: true });
-
-								if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
-									Script.ShowStartInterfacePrompt({
-										message: "Inventory not cached.  Please start the interface",
-										fade: false
-									});
-
-									return;
-								}
-
-								if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
-									Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
-
-									return;
-								}
-
-								if (!(inventory instanceof Inventory)) {
-									return;
-								}
-
-								const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
-
-								if (!casket) {
-									Script.ShowStartInterfacePrompt({
-										message: "Storage unit not cached.  Please start the interface",
-										autoClose: true,
-										popoverMode: true,
-										fade: false,
-										onconnected: () => {
-											window.location.reload();
-										}
-									});
-
-									return;
-								}
-
-								const casketItems = inventory.storedItems.filter(x => x.casket_id == this._assetid);
-
-								if (casketItems.length == 0) {
-									Script.ShowMessage({}, "Storage Unit is empty");
-
-									return;
-								}
-
-								const table = new ItemTable(casketItems, inventory, {
-									mode: ItemTable.MODE.RETRIEVE,
-									casket: casket,
-									casketName: casket.attributes["custom name attr"]
+							if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
+								Script.ShowStartInterfacePrompt({
+									message: "Inventory not cached.  Please start the interface",
+									fade: false
 								});
 
-								table.Show();
+								return;
 							}
-						}),
-						CreateElement("a", {
-							class: "cs2s_small_grey_button cs2s_element",
-							html: "<span>Deposit Items</span>",
-							onclick: async () => {
-								const inventory = await Script.GetInventory({ showProgress: true });
 
-								if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
-									Script.ShowStartInterfacePrompt({
-										message: "Inventory not cached.  Please start the interface"
-									});
+							if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
+								Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
 
-									return;
-								}
+								return;
+							}
 
-								if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
-									Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
+							if (!(inventory instanceof Inventory)) {
+								return;
+							}
 
-									return;
-								}
+							const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
 
-								if (!(inventory instanceof Inventory)) {
-									return;
-								}
-
-								const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
-
-								if (!casket) {
-									Script.ShowStartInterfacePrompt({
-										message: "Storage unit not cached.  Please start the interface",
-										autoClose: true,
-										popoverMode: true,
-										fade: false,
-										onconnected: () => {
-											window.location.reload();
-										}
-									});
-
-									return;
-								}
-
-								const moveableItems = inventory.items.filter(x => x.moveable);
-
-								if (moveableItems.length == 0) {
-									Script.ShowMessage({}, "Inventory has no storable items");
-
-									return;
-								}
-
-								const table = new ItemTable(moveableItems, inventory, {
-									mode: ItemTable.MODE.STORE,
-									casket: casket,
-									casketName: casket.attributes["custom name attr"]
+							if (!casket) {
+								Script.ShowStartInterfacePrompt({
+									message: "Storage unit not cached.  Please start the interface",
+									autoClose: true,
+									popoverMode: true,
+									fade: false,
+									onconnected: () => {
+										window.location.reload();
+									}
 								});
 
-								table.Show();
+								return;
 							}
-						}),
-						CreateElement("a", {
-							class: "cs2s_small_grey_button cs2s_element",
-							html: "<span>Change Label</span>",
-							onclick: async () => {
-								const inventory = await Script.GetInventory({ showProgress: true });
 
-								if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
-									Script.ShowStartInterfacePrompt({
-										message: "Inventory not cached.  Please start the interface"
-									});
+							const casketItems = inventory.storedItems.filter(x => x.casket_id == this._assetid);
 
-									return;
-								}
+							if (casketItems.length == 0) {
+								Script.ShowMessage({}, "Storage Unit is empty");
 
-								if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
-									Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
-
-									return;
-								}
-
-								if (!(inventory instanceof Inventory)) {
-									return;
-								}
-
-								const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
-
-								if (!casket) {
-									Script.ShowStartInterfacePrompt({
-										message: "Storage unit not cached.  Please start the interface",
-										autoClose: true,
-										popoverMode: true,
-										fade: false,
-										onconnected: () => {
-											window.location.reload();
-										}
-									});
-
-									return;
-								}
-
-								const nameForm = new LabelPopup(casket, inventory);
-
-								nameForm.Show();							
+								return;
 							}
-						})
-					);
-				} else {
-					// New unlabeled storage unit
-					ownerActionsElement.classList.add("cs2s_button_row");
-					ownerActionsElement.append(
-						CreateElement("a", {
-							class: "cs2s_small_grey_button cs2s_element",
-							html: "<span>Start Using This Unit</span>",
-							onclick: async () => {
-								const inventory = await Script.GetInventory({ showProgress: true });
 
-								if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
-									Script.ShowStartInterfacePrompt({
-										message: "Inventory not cached.  Please start the interface"
-									});
+							const table = new ItemTable(casketItems, inventory, {
+								mode: ItemTable.MODE.RETRIEVE,
+								casket: casket,
+								casketName: casket.attributes["custom name attr"]
+							});
 
-									return;
-								}
+							table.Show();
+						}
+					}),
+					CreateElement("a", {
+						class: "cs2s_small_grey_button cs2s_element",
+						html: "<span>Deposit Items</span>",
+						onclick: async () => {
+							const inventory = await Script.GetInventory({ showProgress: true });
 
-								if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
-									Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
+							if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
+								Script.ShowStartInterfacePrompt({
+									message: "Inventory not cached.  Please start the interface"
+								});
 
-									return;
-								}
-
-								if (!(inventory instanceof Inventory)) {
-									return;
-								}
-
-								const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
-
-								if (!casket) {
-									Script.ShowStartInterfacePrompt({
-										message: "Storage unit not cached.  Please start the interface",
-										autoClose: true,
-										popoverMode: true,
-										fade: false,
-										onconnected: () => {
-											window.location.reload();
-										}
-									});
-
-									return;
-								}
-
-								const nameForm = new LabelPopup(casket, inventory);
-
-								nameForm.Show();							
+								return;
 							}
-						})
-					);
-				}
-			});
 
-			InventoryAsset.#inventoryWorker.Run();
+							if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
+								Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
+
+								return;
+							}
+
+							if (!(inventory instanceof Inventory)) {
+								return;
+							}
+
+							const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
+
+							if (!casket) {
+								Script.ShowStartInterfacePrompt({
+									message: "Storage unit not cached.  Please start the interface",
+									autoClose: true,
+									popoverMode: true,
+									fade: false,
+									onconnected: () => {
+										window.location.reload();
+									}
+								});
+
+								return;
+							}
+
+							const moveableItems = inventory.items.filter(x => x.moveable);
+
+							if (moveableItems.length == 0) {
+								Script.ShowMessage({}, "Inventory has no storable items");
+
+								return;
+							}
+
+							const table = new ItemTable(moveableItems, inventory, {
+								mode: ItemTable.MODE.STORE,
+								casket: casket,
+								casketName: casket.attributes["custom name attr"]
+							});
+
+							table.Show();
+						}
+					}),
+					CreateElement("a", {
+						class: "cs2s_small_grey_button cs2s_element",
+						html: "<span>Change Label</span>",
+						onclick: async () => {
+							const inventory = await Script.GetInventory({ showProgress: true });
+
+							if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
+								Script.ShowStartInterfacePrompt({
+									message: "Inventory not cached.  Please start the interface"
+								});
+
+								return;
+							}
+
+							if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
+								Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
+
+								return;
+							}
+
+							if (!(inventory instanceof Inventory)) {
+								return;
+							}
+
+							const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
+
+							if (!casket) {
+								Script.ShowStartInterfacePrompt({
+									message: "Storage unit not cached.  Please start the interface",
+									autoClose: true,
+									popoverMode: true,
+									fade: false,
+									onconnected: () => {
+										window.location.reload();
+									}
+								});
+
+								return;
+							}
+
+							const nameForm = new LabelPopup(casket, inventory);
+
+							nameForm.Show();
+						}
+					})
+				);
+
+				// Wait for inventory to load to display label
+				InventoryAsset.#inventoryWorker.Add(async () => {
+					const inventory = await Script.GetInventory();
+					if (!(inventory instanceof Inventory)) {
+						return;
+					}
+
+					if (selectedItem != unsafeWindow.iActiveSelectView
+						|| this._asset != unsafeWindow.g_ActiveInventory.selectedItem
+					) {
+						return;
+					}
+
+					// Display storage unit name
+					const nameTag = inventory.items.find(x => x.iteminfo.id == this._assetid)?.attributes["custom name attr"];
+					if (nameTag) {
+						descriptionsElement.prepend(
+							CreateElement("div", {
+								class: "cs2s_descriptor_blue cs2s_element",
+								text: `Name Tag: "${nameTag}"`
+							}),
+							CreateElement("div", {
+								class: "cs2s_descriptor cs2s_element",
+								text: "\u00A0"
+							})
+						);
+					}
+				});
+
+				InventoryAsset.#inventoryWorker.Run();
+			} else {
+				// New unlabeled storage unit (must be labeled before it can be used)
+				ownerActionsElement.classList.add("cs2s_button_row");
+				ownerActionsElement.append(
+					CreateElement("a", {
+						class: "cs2s_small_grey_button cs2s_element",
+						html: "<span>Start Using This Unit</span>",
+						onclick: async () => {
+							const inventory = await Script.GetInventory({ showProgress: true });
+
+							if (inventory === OPERATION_ERROR.INTERFACE_NOT_CONNECTED) {
+								Script.ShowStartInterfacePrompt({
+									message: "Inventory not cached.  Please start the interface"
+								});
+
+								return;
+							}
+
+							if (inventory === OPERATION_ERROR.FAILED_TO_LOAD) {
+								Script.ShowError({ level: ERROR_LEVEL.HIGH }, new Error("Inventory failed to load, check error logs and refresh the page to try again"));
+
+								return;
+							}
+
+							if (!(inventory instanceof Inventory)) {
+								return;
+							}
+
+							const casket = inventory.items.find(x => x.iteminfo.id == this._assetid);
+
+							if (!casket) {
+								Script.ShowStartInterfacePrompt({
+									message: "Storage unit not cached.  Please start the interface",
+									autoClose: true,
+									popoverMode: true,
+									fade: false,
+									onconnected: () => {
+										window.location.reload();
+									}
+								});
+
+								return;
+							}
+
+							const nameForm = new LabelPopup(casket, inventory);
+
+							nameForm.Show();							
+						}
+					})
+				);
+			}
 		}
 	}
 
