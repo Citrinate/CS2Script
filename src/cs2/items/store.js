@@ -72,7 +72,7 @@ export default class Store {
 			if (!item.requires_supplemental_data) {
 				this.items.push({
 					id: item.def_index,
-					name: item.item_name,
+					name: item.tool_name ?? item.item_name,
 					name_normalized: item.item_name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(),
 					image_name: image_name,
 					hash_name: this.#GetHashName(item),

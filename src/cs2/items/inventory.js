@@ -58,15 +58,22 @@ export default class Inventory {
 			item.id = item.iteminfo.id;
 			item.name = !!item.wear_name && item.full_name.includes(item.wear_name) ? item.full_name.slice(0, -(item.wear_name.length + 3)) : item.full_name;
 			item.name_normalized = !item.name ? undefined : item.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-			item.collection_name = item.set_name ?? item.crate_name?.replace(/( Autograph Capsule)$/, " Autographs").replace(/( Capsule)$/, "");
+			item.collection_name = (
+				item.iteminfo.def_index == 1355 && Object.values(item.stickers).length > 0 
+					? Object.values(item.stickers)[0].set_name ?? Object.values(item.stickers)[0].crate_name // Slabbed stickers
+					: item.set_name ?? item.crate_name // Everything else
+				)?.replace(/( Autograph Capsule)$/, " Autographs").replace(/( Capsule)$/, "");
 			item.collection = item.collection_name?.replace(/^(The )/, "").replace(/( Collection)$/, "").replace(/^(Operation )/, "").replace(/( Autographs)$/, "");
 			item.rarity = item.collection || item.iteminfo.rarity > 1 ? item.iteminfo.rarity : undefined; // leave rarity undefined for crates and such items for sorting purposes
 			item.seed = item.attributes["set item texture seed"] ? Math.floor(item.attributes["set item texture seed"]) : item.attributes["keychain slot 0 seed"];
 
 			// Correct for item qualities having wierd unsortable values
-			if (item.iteminfo.quality == 3) {
+			if (item.iteminfo.quality == 8) {
+				// Customized items (sticker slabs)
+				item.quality = 4;
+			} else if (item.iteminfo.quality == 3) {
 				// ★ items
-				item.quality = 4 + Number(item.stattrak === true); // 4 for ★, 5 for ★ StatTrak
+				item.quality = 5 + Number(item.stattrak === true); // 5 for ★, 6 for ★ StatTrak
 			} else if (item.iteminfo.quality == 12) {
 				// Souvenir items
 				item.quality = 1;
