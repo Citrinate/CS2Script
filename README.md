@@ -4,7 +4,7 @@
 
 ## Introduction
 
-This userscript allows you to manage your Counter-Strike 2 storage units through your Steam Inventory, and inspect items in inventories or on the Steam Marketplace.
+This userscript allows you to manage your Counter-Strike 2 storage units, access the in-game store, and inspect items in inventories or on the Steam Marketplace.
 
 ## Installation
 
@@ -21,6 +21,14 @@ This userscript allows you to manage your Counter-Strike 2 storage units through
 Access your storage unit contents directly from your Steam inventory. Interact with individual storage units or all of them at once. Once loaded, the contents are cached, and can be viewed without your ASF bot.
 
 [![Storage Unit Selection](/screenshots/thumbnails/casket_select.png)](/screenshots/casket_select.png) [![Storage Unit Interface](/screenshots/thumbnails/casket_interface.png)](/screenshots/casket_interface.png)
+
+---
+
+### Store Access
+
+View and purchase items from the in-game store.  Look for the "View Store" button at the top of your Counter-Strike 2 inventory.
+
+[![Storage Unit Selection](/screenshots/thumbnails/shop_interface.png)](/screenshots/shop_interface.png)
 
 ---
 
