@@ -7,6 +7,7 @@ import Cache from "@utils/cache";
 export default class Icons {
 	static URLs = {};
 	static #cacheID = "icon_urls";
+	static #BLANK_STORE_ICON = "i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIa5zlu_XrnbxcykJzXFvQUm9dGsu1yxRxj1zMC2qHQIv6CqbPFrJfXDXzSWwu936LRtGHvh2w0ptHt7bgdE";
 
 	static async LoadCachedIcons() {
 		if (Object.keys(Icons.URLs).length != 0) {
@@ -199,15 +200,15 @@ export default class Icons {
 		}
 	}
 
-	static async FetchStoreIcons(hashes, hashToDefIDMap, progressCallback) {
-		if (hashes.size == 0) {
+	static async FetchStoreIcons(hashes, progressCallback) {
+		if (Object.values(hashes).length == 0) {
 			return;
 		}
 
 		progressCallback("Fetching Store Item Icons", 0);
 
 		// Convert def_indexes to classIDs
-		const classIDsToGetIconsFor = new Set();
+		const itemsToGetIconsFor = {};
 		{
 			let assets;
 			try {
@@ -224,33 +225,31 @@ export default class Icons {
 
 				return;
 			}
-
-			const defIDs = new Set(Object.values(hashToDefIDMap));			
 			
 			for (const asset of assets) {
 				const defID = Number(asset.class.find(x => x.name == "def_index").value);
-				if (!defID || !defIDs.has(defID)) {
+				if (!defID || !hashes[defID]) {
 					continue;
 				}
 
-				classIDsToGetIconsFor.add(asset.classid);
+				itemsToGetIconsFor[asset.classid] = { def_index: defID, hash: hashes[defID] };
 			}
 		}
 
 		// Get the icon for each classID
-		if (classIDsToGetIconsFor.size == 0) {
+		const classIDs = Object.keys(itemsToGetIconsFor);
+		if (classIDs.length == 0) {
 			return;
 		}
 
 		const sizeLimit = 100;
+		const iconsToFetch = classIDs.length;
+		let iconsFetched = 0;
 
 		const chunkedClassIDs = Array.from(
-			{ length: Math.ceil(classIDsToGetIconsFor.size / sizeLimit) },
-			(_, index) => [...classIDsToGetIconsFor].slice(index * sizeLimit, (index + 1) * sizeLimit)
+			{ length: Math.ceil(iconsToFetch / sizeLimit) },
+			(_, index) => classIDs.slice(index * sizeLimit, (index + 1) * sizeLimit)
 		);
-
-		const iconsToFetch = classIDsToGetIconsFor.size;
-		let iconsFetched = 0;
 
 		for (const chunk of chunkedClassIDs) {
 			let assets;
@@ -271,10 +270,11 @@ export default class Icons {
 
 			for (const classID of chunk) {
 				const iconUrl = assets[classID]?.icon_url;
-				const hash = assets[classID]?.market_hash_name;
-				if (iconUrl && hash) {
+				if (iconUrl && iconUrl != this.#BLANK_STORE_ICON) {
+					const hash = itemsToGetIconsFor[classID].hash;
+					const def_index = itemsToGetIconsFor[classID].def_index;
 					this.SetIcon(hash, iconUrl);
-					hashes.delete(hash);
+					delete hashes[def_index];
 				}
 			}
 

@@ -51,8 +51,8 @@ export default class Inventory {
 		}
 
 		// Build a list of all the items we need to get icons for
-		const itemsToGetIconsFor = new Set();
-		const commodityItemsToGetIconsFor = new Set();
+		const marketItemsToGetIconsFor = new Set();
+		const commodityMarketItemsToGetIconsFor = new Set();
 
 		for (const item of [...this.items, ...this.storedItems]) {
 			item.id = item.iteminfo.id;
@@ -94,7 +94,7 @@ export default class Inventory {
 						continue;
 					}
 
-					commodityItemsToGetIconsFor.add(sticker.full_name);
+					commodityMarketItemsToGetIconsFor.add(sticker.full_name);
 				}
 			}
 
@@ -104,7 +104,7 @@ export default class Inventory {
 						continue;
 					}
 
-					itemsToGetIconsFor.add(keychain.full_name);
+					marketItemsToGetIconsFor.add(keychain.full_name);
 				}
 			}
 
@@ -113,17 +113,17 @@ export default class Inventory {
 			}
 
 			if (item.commodity) {
-				commodityItemsToGetIconsFor.add(item.full_name);
+				commodityMarketItemsToGetIconsFor.add(item.full_name);
 			} else {
-				itemsToGetIconsFor.add(item.full_name);
+				marketItemsToGetIconsFor.add(item.full_name);
 			}
 		}
 
 		// Attempt to get commodity icons in batches from the multisell page
-		await Icons.FetchMarketCommodityIcons(commodityItemsToGetIconsFor, progressCallback);
+		await Icons.FetchMarketCommodityIcons(commodityMarketItemsToGetIconsFor, progressCallback);
 
 		// Get everything else individually from market listing pages, including failed commodity fetches
-		await Icons.FetchMarketIcons(new Set([...itemsToGetIconsFor, ...commodityItemsToGetIconsFor]), progressCallback);
+		await Icons.FetchMarketIcons(new Set([...marketItemsToGetIconsFor, ...commodityMarketItemsToGetIconsFor]), progressCallback);
 	}
 
 	async #OpenCrate(item) {

@@ -324,7 +324,7 @@ export default class StoreTable extends Table {
 					class: "cs2s_table_image_column",
 					children: [
 						CreateElement("img", {
-							src: item.requires_supplemental_data ? (Icons.GetIconURL(item.hash_name, "93fx62f") ?? Icons.GetIconURL(item.image_hash_name, "93fx62f") ?? Icons.GetIconURL(item.image_name, "93fx62f")) : Icons.GetIconURL(item.image_name, "93fx62f")
+							src: item.requires_supplemental_data ? (Icons.GetIconURL(item.alt_image_name, "93fx62f") ?? Icons.GetIconURL(item.image_name, "93fx62f")) : Icons.GetIconURL(item.image_name, "93fx62f")
 						})
 					]
 				}),
@@ -332,7 +332,7 @@ export default class StoreTable extends Table {
 					class: "cs2s_table_name_column cs2s_table_store_name_column",
 					text: item.name,
 					children: [
-						item.hash_name && CreateElement("a", {
+						CreateElement("a", {
 							href: `https://steamcommunity.com/market/listings/${Constant.CS2_APPID}/${encodeURIComponent(item.hash_name)}`,
 							target: "_blank",
 							html: /*html*/`
@@ -682,7 +682,7 @@ export default class StoreTable extends Table {
 					class: "cs2s_table_title_item",
 					children: [ itemName ],
 					vars: {
-						"image-url": `url(${this.#selectedItem.requires_supplemental_data ? (Icons.GetIconURL(this.#selectedItem.hash_name, "66fx45f") ?? Icons.GetIconURL(this.#selectedItem.image_hash_name, "66fx45f") ?? Icons.GetIconURL(this.#selectedItem.image_name, "66fx45f")) : Icons.GetIconURL(this.#selectedItem.image_name, "66fx45f")})`
+						"image-url": `url(${this.#selectedItem.requires_supplemental_data ? (Icons.GetIconURL(this.#selectedItem.alt_image_name, "66fx45f") ?? Icons.GetIconURL(this.#selectedItem.image_name, "66fx45f")) : Icons.GetIconURL(this.#selectedItem.image_name, "66fx45f")})`
 					}
 				})
 			],
