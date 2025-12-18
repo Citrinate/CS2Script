@@ -18,7 +18,7 @@ export const ERROR_LEVEL = {
 };
 
 class Script {
-	static MIN_PLUGIN_VERSION = "1.2.0.0";
+	static MIN_PLUGIN_VERSION = "1.2.0.1";
 
 	Bot;
 	AccountsConnected = 0;
