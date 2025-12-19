@@ -4,7 +4,7 @@
 
 ## Introduction
 
-This userscript allows you to manage your Counter-Strike 2 storage units, access the in-game store, and inspect items in inventories or on the Steam Marketplace.
+This userscript allows you to perform several Counter-Strike 2 actions directly from the Steam Community website.
 
 ## Installation
 
@@ -26,7 +26,7 @@ Access your storage unit contents directly from your Steam inventory. Interact w
 
 ### Store Access
 
-View and purchase items from the in-game store.  Look for the "View Store" button at the top of your Counter-Strike 2 inventory.
+View and purchase items from the in-game store. Look for the "View Store" button at the top of your CS2 inventory.
 
 [![Storage Unit Selection](/screenshots/thumbnails/shop_interface.png)](/screenshots/shop_interface.png)
 
@@ -34,22 +34,19 @@ View and purchase items from the in-game store.  Look for the "View Store" butto
 
 ### Item Inspection
 
-View detailed item information in Steam inventories or on the Steam marketplace. Each ASF bot can inspect one item per second, so the more bots you have, the faster you'll be able to inspect large amounts of items.
-
-> [!NOTE]
-> This can be disabled under "Settings" if you're also using another tool that provides a similar feature
+View detailed item information in Steam inventories or on the Steam marketplace. Each ASF bot can inspect one item per second, so the more bots you have, the faster you'll be able to inspect large amounts of items. This can be disabled under "Settings" if you're also using another tool that provides a similar feature.
 
 [![Inventory Items](/screenshots/thumbnails/inventory_items.png)](/screenshots/inventory_items.png) [![Market Items](/screenshots/thumbnails/market_items.png)](/screenshots/market_items.png)
 
 ## Usage
 
-Status and controls for the script can be found in the account dropdown menu, while on any Steam inventory or market listing page.  If using non-default IPC settings with ASF, you'll need to configure how the script connects to ASF under "Settings".
+Status and controls for the script can be found in the account dropdown menu while on any Steam inventory or market listing page. If using non-default IPC settings with ASF, you'll need to configure how the script connects to ASF under "Settings".
 
 [![Menu](/screenshots/thumbnails/script_menu.png)](/screenshots/script_menu.png) [![Settings](/screenshots/thumbnails/script_settings.png)](/screenshots/script_settings.png)
 
-You have the option to manually Start and Stop the interface (connecting and disconnecting your account from CS2).  This is only necessary when you want to inspect items.  When managing your storage units, the script will prompt you to connect whenever necessary.  By default, the interface will automatically stop after a period of inactivity (note: simply viewing a page where the script is active counts as activity).
+Most actions require a connection to the CS2 game coordinator via the ASF CS2 Interface plugin. The script will prompt you to start the interface for these actions. By default, the interface automatically stops after a period of inactivity (viewing a page with the script is considered activity). You can also manually stop the interface from the dropdown menu.
 
-To inspect items, the interface must be running on at least any one bot. If you want certain bots to have the interface always running for this purpose, it’s recommended you configure them to [auto-start](https://github.com/Citrinate/CS2Interface#autostartcs2interface) the interface.
+Item inspection also requires the interface to be running on at least one ASF bot. However, the script will not prompt you to start it for this. You must instead start the interface manually from the dropdown menu. If you want certain bots to have the interface always running for this purpose, it is recommended to configure those bots to [auto-start](https://github.com/Citrinate/CS2Interface#autostartcs2interface) the interface.
 
 ## Is this safe to use?
 
