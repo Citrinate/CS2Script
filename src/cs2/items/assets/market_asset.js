@@ -152,7 +152,7 @@ export default class MarketAsset extends Asset {
 		MarketAsset.#builtItemPageUI = true;
 
 		if (this._inspectData.wear && this._inspectData.seed) {
-			const descriptionsElement = unsafeWindow.document.querySelector(".largeiteminfo_react_placeholder > div > div > div > div > div:nth-child(2) > div:nth-child(3)");
+			const descriptionsElement = unsafeWindow.document.querySelector(".largeiteminfo_react_placeholder > div > div:nth-child(2) > div:nth-child(3)");
 
 			if (descriptionsElement) {
 				descriptionsElement.prepend(this._GetWearRangeElement(true));
