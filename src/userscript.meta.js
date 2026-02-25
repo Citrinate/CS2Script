@@ -6,7 +6,7 @@ export const userscriptHeader =
 // @name        Counter-Strike 2 Script
 // @namespace   https://github.com/Citrinate
 // @author      Citrinate
-// @description Manage your CS2 storage units and inspect items
+// @description Interact with Counter-Strike 2
 // @license     Apache-2.0
 // @version     ${pkg.version}
 // @match       https://steamcommunity.com/id/*/inventory*
