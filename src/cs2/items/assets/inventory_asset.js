@@ -143,10 +143,21 @@ export default class InventoryAsset extends Asset {
 						return;
 					}
 
-					// Update float element with percentile info
-					if (floatElement && this._inspectData.wear && this._wearData) {
-						floatElement.innerText = this._inspectData.wear.toFixed(this.#isTradeProtected ? 2 : 6);
-						floatElement.append(" ", this._GetPercentileElement());
+					if (this._inspectData.wear && this._wearData) {
+						if (floatElement) {
+							// Update float element with percentile info
+							floatElement.innerText = this._inspectData.wear.toFixed(this.#isTradeProtected ? 2 : 6);
+							floatElement.append(" ", this._GetPercentileElement());
+						} else {
+							// Display float data for the first time (Steam only provides float values for the first 75 inventory items)
+							floatElement = CreateElement("div", {
+								class: `cs2s_asset_wear cs2s_asset_wear_${Asset.GetWear(this._inspectData.wear).name.toLowerCase()}`,
+								text: this._inspectData.wear.toFixed(this.#isTradeProtected ? 2 : 6)
+							});
+							floatElement.append(" ", this._GetPercentileElement());
+
+							this._asset.element.append(floatElement);
+						}
 					}
 				}
 
