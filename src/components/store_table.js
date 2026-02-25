@@ -25,8 +25,10 @@ export default class StoreTable extends Table {
 	static TAB = {
 		GENERAL: 0,
 		TOOLS: 1,
-		TOURNAMENT_CAPSULES: 2,
-		TOURNAMENT_SOUVENIRS: 3
+		KEYS: 2,
+		TOURNAMENT_CAPSULES: 3,
+		TOURNAMENT_SOUVENIRS: 4,
+		OTHER: 5
 	};
 
 	constructor(store) {
@@ -266,6 +268,13 @@ export default class StoreTable extends Table {
 								this.#ChangeTab(event.currentTarget, StoreTable.TAB.TOOLS);
 							}
 						}),
+						CreateElement("a", {
+							class: "cs2s_table_footer_action_link cs2s_table_footer_action_link_no_icon",
+							text: "Keys",
+							onclick: (event) => {
+								this.#ChangeTab(event.currentTarget, StoreTable.TAB.KEYS);
+							}
+						}),
 						this.#store.items.find(item => item.tournament_id) && CreateElement("a", {
 							class: "cs2s_table_footer_action_link cs2s_table_footer_action_link_no_icon",
 							text: "Tournament",
@@ -278,6 +287,13 @@ export default class StoreTable extends Table {
 							text: "Tournament Souvenirs",
 							onclick: (event) => {
 								this.#ChangeTab(event.currentTarget, StoreTable.TAB.TOURNAMENT_SOUVENIRS);
+							}
+						}),
+						CreateElement("a", {
+							class: "cs2s_table_footer_action_link cs2s_table_footer_action_link_no_icon",
+							text: "Other",
+							onclick: (event) => {
+								this.#ChangeTab(event.currentTarget, StoreTable.TAB.OTHER);
 							}
 						})
 					]
@@ -428,11 +444,24 @@ export default class StoreTable extends Table {
 			return false;
 		}
 
+		if (this.#tab === StoreTable.TAB.KEYS && item.type != "Key") {
+			return false;
+		}
+
 		if (this.#tab === StoreTable.TAB.TOURNAMENT_CAPSULES && (!item.tournament_id || item.requires_supplemental_data)) {
 			return false;
 		}
 
 		if (this.#tab === StoreTable.TAB.TOURNAMENT_SOUVENIRS && (!item.tournament_id || !item.requires_supplemental_data)) {
+			return false;
+		}
+
+		if (this.#tab === StoreTable.TAB.OTHER && (
+			typeof item.layout_weight !== "undefined" 
+			|| item.layout_format == "single" 
+			|| item.type == "Key" 
+			|| item.tournament_id
+		)) {
 			return false;
 		}
 
