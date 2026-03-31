@@ -34,7 +34,7 @@ View and purchase items from the in-game store. Look for the "View Store" button
 
 ### Item Inspection
 
-View detailed item information in Steam inventories or on the Steam marketplace. Each ASF bot can inspect one item per second, so the more bots you have, the faster you'll be able to inspect large amounts of items. This can be disabled under "Settings" if you're also using another tool that provides a similar feature.
+View detailed item information in Steam inventories or on the Steam marketplace. This can be disabled under "Settings" if you're also using another tool that provides a similar feature.
 
 [![Inventory Items](/screenshots/thumbnails/inventory_items.png)](/screenshots/inventory_items.png) [![Market Items](/screenshots/thumbnails/market_items.png)](/screenshots/market_items.png)
 
@@ -45,8 +45,6 @@ Status and controls for the script can be found in the account dropdown menu whi
 [![Menu](/screenshots/thumbnails/script_menu.png)](/screenshots/script_menu.png) [![Settings](/screenshots/thumbnails/script_settings.png)](/screenshots/script_settings.png)
 
 Most actions require a connection to the CS2 game coordinator via the ASF CS2 Interface plugin. The script will prompt you to start the interface for these actions. By default, the interface automatically stops after a period of inactivity (viewing a page with the script is considered activity). You can also manually stop the interface from the dropdown menu.
-
-Item inspection also requires the interface to be running on at least one ASF bot. However, the script will not prompt you to start it for this. You must instead start the interface manually from the dropdown menu. If you want certain bots to have the interface always running for this purpose, it is recommended to configure those bots to [auto-start](https://github.com/Citrinate/CS2Interface#autostartcs2interface) the interface.
 
 ## Is this safe to use?
 
