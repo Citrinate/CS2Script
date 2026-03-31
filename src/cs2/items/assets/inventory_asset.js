@@ -39,8 +39,13 @@ export default class InventoryAsset extends Asset {
 
 		if (this._type == Asset.TYPE.WEARABLE) {
 			for (const action of asset.description.actions) {
-				if (action.link.includes("steam://rungame")) {
-					this._inspectLink = action.link.replace("%owner_steamid%", unsafeWindow.g_ActiveUser.strSteamId).replace("%assetid%", asset.assetid);
+				if (action.link.includes("steam://run")) {
+					if (action.link.includes("%propid:6%")) {
+						this._inspectLink = decodeURIComponent(action.link.replace("%propid:6%", this.GetProperty(6)?.string_value));
+					} else {
+						this._inspectLink = decodeURIComponent(action.link);
+					}
+
 					break;
 				}
 			}
