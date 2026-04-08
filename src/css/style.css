@@ -486,6 +486,7 @@
 	transition-property: opacity,background,color,box-shadow;
 	transition-duration: .2s;
 	transition-timing-function: ease-out;
+	font-size: 12px;
 
 	&:hover {
 		background-color: #67707b;
