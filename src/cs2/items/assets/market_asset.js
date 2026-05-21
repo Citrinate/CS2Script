@@ -1,7 +1,7 @@
 import Script, { ERROR_LEVEL } from "@core/script.js";
 import { GetSetting, SETTING_INSPECT_ITEMS } from "@core/settings.js";
 import Asset from "@cs2/items/assets/asset.js";
-import { CreateElement } from "@utils/helpers.js";
+import { CreateElement, WaitForElm } from "@utils/helpers.js";
 
 export default class MarketAsset extends Asset {
 	_asset;
@@ -157,11 +157,9 @@ export default class MarketAsset extends Asset {
 		MarketAsset.#builtItemPageUI = true;
 
 		if (this._inspectData.wear && this._inspectData.seed) {
-			const descriptionsElement = unsafeWindow.document.querySelector(".largeiteminfo_react_placeholder > div > div:nth-child(2) > div:nth-child(3)");
-
-			if (descriptionsElement) {
+			WaitForElm(".largeiteminfo_react_placeholder > div > div > div:nth-child(2) > div:nth-child(3)").then((descriptionsElement) => {
 				descriptionsElement.prepend(this._GetWearRangeElement(true));
-			}
+			})
 		}
 	}
 

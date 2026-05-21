@@ -4,7 +4,7 @@ import Asset from "@cs2/items/assets/asset.js";
 import Inventory from "@cs2/items/inventory.js";
 import ItemTable from "@components/item_table.js";
 import LabelPopup from "@components/label_popup";
-import { CreateElement } from "@utils/helpers.js";
+import { CreateElement, WaitForElm } from "@utils/helpers.js";
 import Worker from '@utils/worker';
 import { QUALITIES, RARITIES } from "@cs2/constants";
 
@@ -247,10 +247,11 @@ export default class InventoryAsset extends Asset {
 	// Add additional information the currently selected inventory item
 	async BuildSelectedUI() {
 		const selectedItem = unsafeWindow.iActiveSelectView;
-		const descriptionsElement = unsafeWindow.document.getElementById(`iteminfo${selectedItem}`).querySelector(":scope > div > div > div:nth-child(5)");
+		await WaitForElm(`#iteminfo${selectedItem} > div > div`);
+		const descriptionsElement = unsafeWindow.document.getElementById(`iteminfo${selectedItem}`).querySelector(":scope > div > div > div > div:nth-child(5)");
 		const stickerElements = descriptionsElement.getElementsBySelector("#sticker_info img");
 		const charmElements = descriptionsElement.getElementsBySelector("#keychain_info img");
-		const ownerActionsElement = unsafeWindow.document.getElementById(`iteminfo${selectedItem}`).querySelector(":scope > div > div > div:nth-child(7)");
+		const ownerActionsElement = unsafeWindow.document.getElementById(`iteminfo${selectedItem}`).querySelector(":scope > div > div > div > div:nth-child(7)");
 
 		// Weapon skins
 		if (this.ShouldInspect() && GetSetting(SETTING_INSPECT_ITEMS)) {
