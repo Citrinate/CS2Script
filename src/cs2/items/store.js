@@ -71,7 +71,7 @@ export default class Store {
 				this.items.push({
 					id: item.def_index,
 					name: item.item_name,
-					name_normalized: item.item_name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(),
+					name_normalized: item.item_name?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(),
 					image_name: hash_name,
 					hash_name: hash_name,
 					type: type,
